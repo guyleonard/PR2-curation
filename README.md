@@ -32,7 +32,7 @@ You can install the latest development version of the code using the _shiny_ R p
 # install.packages("shiny")
 library(shiny)
 
-runGitHub(repo = "PR2cur", username = "martan29", ref = "main")
+runGitHub(repo = "PR2-curation", username = "delCampoLab", ref = "main")
 ```
 
 ## 2. Pipeline improvements
