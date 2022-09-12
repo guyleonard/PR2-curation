@@ -31,7 +31,7 @@ Tools necessary to install to run the pipeline are listed below. You should inst
 You can install the latest development version of the code using the _shiny_ R package.
 
 ```{r, eval=FALSE}
-# Install devtools, if you haven't already.
+## Install devtools, if you haven't already.
 # install.packages("shiny")
 library(shiny)
 
