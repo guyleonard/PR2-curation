@@ -41,9 +41,7 @@ PR2 curation has the interface of an application and the user can do all the man
 
 The reference trees serve us in addressing the goal of improving the eukaryotic taxonomic framework and creating a repository of correctly annotated high-throughput environmental sequencing (HTES) reads.
 
-![](https://user-images.githubusercontent.com/71433342/188953299-e2914ea5-7225-49c1-885c-da62c01e4045.png)
-_Figure 1. (A) On the left is the simplified schematic of the old Eukref workflow. (B) On the right the schematic of the new Shiny workflow. Outputs are highlighted in red. HTES, high-throughput environmental sequencing. \* Manual curation in the new pipeline takes place within the Shiny graphical interface. _
-
+![pipeline](https://user-images.githubusercontent.com/71433342/189580353-437fd447-f4f1-4bf3-af55-dbbf44381c78.png)
 
 ## 3. Features
 
