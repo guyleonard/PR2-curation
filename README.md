@@ -2,7 +2,7 @@
 
 # Final Master Thesis - PR2 curation: a shiny app version of the EukRef data curation pipeline
 
-EukRef is an initiative that allows users interested in a particular group of microbial eukaryotes to retrieve all sequences belonging to that group, place those sequences in a phylogenetic tree, and curate taxonomic and environmental information for the group. EukRef is currently part of the Protist Ribosomal Reference database and its curation workflow has been incorporated to the database. Here we present a web application developed in the R environment that adapts the above pipeline to make the user experience friendlier and simpler. PR2 curation allows:
+EukRef is an initiative that allows users interested in a particular group of microbial eukaryotes to retrieve all sequences belonging to that group, place those sequences in a phylogenetic tree, and curate taxonomic and environmental information for the group. EukRef is currently part of the Protist Ribosomal Reference (PR2) database and its curation workflow has been incorporated to the database. Here we present a web application developed in the R environment that adapts the above pipeline to make the user experience friendlier and simpler. PR2 curation allows:
 
 (i) downloading data from PR2,
 
