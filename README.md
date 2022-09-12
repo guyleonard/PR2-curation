@@ -50,35 +50,33 @@ The reference trees serve us in addressing the goal of improving the eukaryotic 
 
 **a) Default features**
 
--   When clustering sequences with vsearch, a similarity threshold of 97% is set. The code chooses the longest sequence as the representative sequence for each cluster (these will be used later for alignment). Sequences shorter than 500 bp are also removed.
+- When clustering sequences with VSEARCH, a similarity threshold of 97% is set. The code chooses the longest sequence as the representative sequence for each cluster (these will be used later for alignment). Sequences shorter than 500 bp are also removed.
+- In trimAl all positions in the alignment with gaps in 70% or more of the sequences are removed. A threshold of 0.001 is set for the minimum allowed average similarity. 
+- The algorithm selected in RAxML was a fast bootstrap analysis and search for the best scoring ML tree in a single program run.
 
--   In trimAl all positions in the alignment with gaps in 70% or more of the sequences are removed. A threshold of 0.001 is set for the minimum allowed average similarity.
 
--   The algorithm selected in RAxML was a fast bootstrap analysis and search for the best scoring ML tree in a single program run.
-
-**b) Modifications for the user**
+**b) Functions modifiable by the user**
 
 The user can make modifications of a visual nature, modifications that do not change the properties of the tree, or of an analytical nature, modifications that change the properties of the tree. All of them are defined in Table 1. 
 
-| Modifications | Descriptions |
+| Function | Description |
 |:-------------------------------|:---------------------------------------| 
-| <em>Visual character<em> | | 
+| <em>Visual<em> | | 
 | <b>Rotate<b> | To facilitate the exploration of the tree structure, there is the option to rotate the selected clade by 180 degrees indicating the node in question. In other words, for a given node, rotate swaps the position of two clades descending from this node. | 
 | <b>Flip<b> | The position of the immediate descendant clades of the internal node can be exchanged with this option. Therefore, exchange positions of 2 clades that share a parent node. | 
-| <em>Analytical character<em> | |
+| <em>Analytical<em> | |
 | <b>Reroot<b> | Reroots a phylogenetic tree with respect to the specified outgroup or at the node specified in node. In case the tree is not rooted with the outgroup, the user can employ the use of this option. |
-| <b>Remove in tree<b> | Remove branches from a phylogenetic tree due to low sequence quality, errors in sequence assembly, alignment error, phylogenetic inference error, among others. This modification will be shown in the Cladogram display. For this edition of the tree, the user must attach three files: an .xlsx file with the names of the branches to be deleted, the .cluster file where the seed sequences are identified and the .fa file containing the DNA sequences. Internally, the application looks for the name of the branches provided by the user in the cluster file. These branches are deleted and, if they are seed, the branches within them are also deleted. Finally, a new fasta file is created with the resulting sequences. | 
-| <b>Remove in input dataset<b> | Remove branches from the initial fasta file in case you want to reflect in the DNA sequences the branches removed in the tree. To do this, the user must attach three files: an .xlsx file with the names of the branches to be deleted, the .cluster file where the seed sequences are identified and the .fa file containing the DNA sequences. Internally, the application searches for the name of the branches provided by the user in the cluster file. The indicated branches are deleted and, in the case of a seed, the branches within it are also deleted. Finally, a new fasta file is created with the resulting sequences. | 
-| <b>Rename in tree<b> | Rename the branches in the tree display. For example, if the accession numbers are listed. The user must provide a txt file where in the first column the current names are specified and in a second column (separated by tabulation) the desired name. | 
-| <b>Rename in input dataset<b> | Rename the branches in the initial fasta file with the DNA sequences. For example, if the accession numbers are listed. The user must provide a txt file where in the first column the current names are specified and in a second column (separated by tabulation) the desired name. Internally, the application searches for the name of the branches provided in the first column and replaces them with the names in the second column, providing a new FA file. |
+| <b>Remove in tree<b> | Remove branches from a phylogenetic tree due to low sequence quality, errors in sequence assembly, alignment error, phylogenetic inference error, among others. This modification will be shown in the Cladogram display. For this edition, the user must attach three files: an .xlsx file with the names of the branches to be deleted, the .cluster file where the seed sequences are identified and the FA file containing the DNA sequences. Internally, the application looks for the name of the branches provided by the user in the cluster file. These branches are deleted and, if they are seed, the branches within them are also deleted. Finally, a new phylogenetic tree is built. | 
+| <b>Remove in input dataset<b> | Remove sequences from the initial FA file. The process is the same as the one described in the "Remove in tree" section but a new FA file is obtained with the resulting sequences. | 
+| <b>Rename in tree<b> | Rename the branches in the tree display. For example, if the accession numbers are listed. The user must provide a txt file where in the first column the current names are specified and in a second column (separated by tabulation) the desired taxonomic studies. |
+| <b>Rename in input dataset<b> | Rename the branches in the initial FA file with the DNA sequences. For example, if the accession numbers are listed. The user must provide a txt file where in the first column the current names are specified and in a second column (separated by tabulation) the desired taxonomic studies. Internally, the application searches for the name of the branches provided in the first column and replaces them with the names in the second column, providing a new FA file. |
 | | | 
 | <b>Save<b> | Option to download the tree creation in PDF format or, also, a new tree file to save the modifications made in the interface. |
 
 ## 4. Suessiales of a case study
 
-To illustrate the usefulness and functioning of PR2 curation, we cite Suessiales, an order of unicellular organisms of the class Dinophyceae, as a case study. 
-
-The app consists of a left panel with all the options for modifying and editing the tree and a right panel where the phylogenetic trees are displayed, always showing the last tree in the first position (Figure on the right). 
+To illustrate the usefulness and functioning of PR2 curation, we use Suessiales, an order of unicellular organisms of the class Dinophyceae, as a case study. 
+The app consists of a left panel with all the options for modifying and editing the tree and a right panel where the phylogenetic trees are displayed, always showing the last tree in the first position (Figure 2A). 
 
 ### 1. Creation of phylogenetic tree
 
