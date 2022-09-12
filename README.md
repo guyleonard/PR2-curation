@@ -18,12 +18,15 @@ EukRef is an initiative that allows users interested in a particular group of mi
 
 Tools necessary to install to run the pipeline are listed below. You should install each of these programs on your computer.
 
--   [Vsearch](https://github.com/torognes/vsearch)
--   [MAFFT](https://mafft.cbrc.jp/alignment/server/)
--   [trimAl](http://trimal.cgenomics.org/)
--   [RAxML](https://cme.h-its.org/exelixis/web/software/raxml/)
--   [R](https://cran.r-project.org/bin/windows/base/)
--   [RStudio](https://www.rstudio.com/)
+-   [Vsearch](https://github.com/torognes/vsearch): a 64-bit, open source, free, multithreaded tool for processing and preparing metagenomics, genomics, and population genomics nucleotide sequence data. VSEARCH uses a global optimal aligner (Needleman-Wunsch full dynamic programming).
+
+-   [MAFFT](https://mafft.cbrc.jp/alignment/server/): is a high-speed multiple sequence alignment program for unix-like operating systems.
+
+-   [trimAl](http://trimal.cgenomics.org/): tool for automated removal of spurious sequences or misaligned regions from a multiple sequence alignment. It implements a series of automated algorithms that trim the alignment by finding optimal thresholds based on inherent features of the input alignment, which will be used to increase the signal-to-noise ratio after the alignment trimming phase.
+-   [RAxML](https://cme.h-its.org/exelixis/web/software/raxml/): is a program for sequential and parallel Maximum Likelihood based inference of large phylogenetic trees. It can also be used for post analyses of sets of phylogenetic trees, analyses of alignments, and evolutionary placement of short reads.
+
+-   [R](https://cran.r-project.org/bin/windows/base/): is a language and environment for statistical computing and graphics.
+-   [RStudio](https://www.rstudio.com/): an integrated development environment for R, with a console, syntax-highlighting editor that supports direct code execution, and tools for plotting, history, debugging and workspace management.
 
 You can install the latest development version of the code using the _shiny_ R package.
 
