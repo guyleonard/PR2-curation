@@ -1,33 +1,7 @@
-# R PACKAGES
+# PACKAGES
+# librarian installs/updates/loads CRAN, github & Bioconductor all-in-one! 
 install.packages("librarian")
-librarian::shelf(ape, devtools, dplyr, ggplot2, ggrepel, insect, readxl, shiny, shinybusy)
-
-# BIOCONDUCTOR PACKAGE
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("pr2database")
-BiocManager::install("treeio")
-BiocManager::install("Biostrings")
-BiocManager::install("ggtree")
-
-# LIBRARIES
-library(shiny)
-library(dplyr)
-library(devtools)
-library(ggtree)
-library(ggplot2)
-library(ggrepel)
-library(shinybusy)
-library(pr2database)
-library(readxl)
-library(Biostrings) # To save fasta files
-library(base)
-library(treeio) # tree manipulation
-library(ape)
-library(insect)
-
-# GITHUB PACKAGE
-devtools::install_github("pr2database/pr2database")
+librarian::shelf(ape, base, Biostrings, devtools, dplyr, ggplot2, ggrepel, ggtree, insect, pr2database/pr2database, readxl, shiny, shinybusy, treeio)
 
 ## FUNCTIONS
 seq_clade <- function(x){
