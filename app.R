@@ -1,7 +1,7 @@
 # PACKAGES
 # librarian installs/updates/loads CRAN, github & Bioconductor all-in-one! 
-install.packages("librarian")
-librarian::shelf(ape, base, Biostrings, devtools, dplyr, ggplot2, ggrepel, ggtree, insect, pr2database/pr2database, readxl, shiny, shinybusy, treeio)
+if (!require("librarian")) install.packages("librarian")
+librarian::shelf(ape, base, Biostrings, devtools, dplyr, ggplot2, ggrepel, ggtree, insect, pr2database/pr2database, readxl, shiny, shinybusy, treeio, profvis, quiet = TRUE)
 
 ## FUNCTIONS
 seq_clade <- function(x){
