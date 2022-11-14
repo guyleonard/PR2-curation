@@ -1,13 +1,6 @@
 # R PACKAGES
-install.packages("shiny")
-install.packages("shinybusy")
-install.packages("devtools")
-install.packages("ape")
-install.packages("dplyr")
-install.packages("ggplot2")
-install.packages("ggrepel")
-install.packages("readxl")
-install.packages("insect")
+install.packages("librarian")
+librarian::shelf(ape, devtools, dplyr, ggplot2, ggrepel, insect, readxl, shiny, shinybusy)
 
 # BIOCONDUCTOR PACKAGE
 if (!require("BiocManager", quietly = TRUE))
