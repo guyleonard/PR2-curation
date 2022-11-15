@@ -531,7 +531,7 @@ server <- function(input, output) {
     flip_out()
   })
   
-  # ROOT
+  # REROOT
   root_out <- reactive({
     if (input$root) {
       t <- ape::root(treeR,
@@ -548,9 +548,11 @@ server <- function(input, output) {
   # REMOVE
   removee <- reactive({
     if (input$remove) {
+      shiny::validate(need(input$delfile, "Input a File!"))
       show_modal_spinner(spin = "fading-circle",
                          color = "#0063B1",
                          text = "Generating File...")
+      
       del <- read_excel(input$delfile$datapath, col_names = FALSE)
       del <- as.vector(del[, 1])
       cluster <-
@@ -561,9 +563,9 @@ server <- function(input, output) {
           dec = "."
         )
       dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
-      new_clu <- cluster[!cluster$V10 %in% del, ]
-      new_clu <- new_clu[!new_clu$V9 %in% del, ]
-      new_clu <- new_clu[!duplicated(new_clu$V9), ]
+      new_clu <- cluster[!cluster$V10 %in% del,]
+      new_clu <- new_clu[!new_clu$V9 %in% del,]
+      new_clu <- new_clu[!duplicated(new_clu$V9),]
       new_clu <- as.vector(new_clu$V9)
       
       # Export PR2 file
@@ -580,8 +582,10 @@ server <- function(input, output) {
     removee()
   })
   
+  # MODIFY
   pr2mod <- reactive({
     if (input$removed) {
+      shiny::validate(need(input$prmod, "Input a File!"))
       if (interactive())
         show_modal_spinner(spin = "fading-circle",
                            color = "#0063B1",
@@ -649,6 +653,7 @@ server <- function(input, output) {
   renamee <- reactive({
     # Attach file
     if (input$rename) {
+      shiny::validate(need(input$refile, "Input a File!"))
       new_name <-
         read.csv(
           input$refile$datapath,
@@ -657,8 +662,9 @@ server <- function(input, output) {
           sep = "\t"
         )
       # replot <- treeplot(treeR, "Phylogenetic tree with renamed branches")
-      treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
-        new_name$V2
+      #treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
+      #  new_name$V2
+      treeR %<+% new_name
       p_rename <-
         treeplot(treeR, "Phylogenetic Tree with Renamed Branches")
       return(p_rename)
@@ -690,7 +696,6 @@ server <- function(input, output) {
     }
   )
 }
-
 
 ## APP
 shinyApp(ui, server)
