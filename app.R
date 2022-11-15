@@ -16,6 +16,7 @@ librarian::shelf(
   readxl,
   shiny,
   shinybusy,
+  tidytree,
   treeio,
   quiet = TRUE
 )
@@ -64,22 +65,22 @@ ui <- fluidPage(sidebarLayout(
         src = "tra.png",
         height = 72,
         width = 72
-      ), "PR2 curation"
+      ), "PR2 Curation"
     )), style = "text-align: center"),
     p(
       span(
-        "PR2 curation is an application that allows users interested in a particular group of microbial eukaryotes to retrieve all sequences belonging to that group, place those sequences in a phylogenetic tree, and curate taxonomic and environmental information about the group."
+        "PR2 Curation is an application that allows users interested in a particular group of microbial eukaryotes to retrieve all sequences belonging to that group, place those sequences in a phylogenetic tree, and curate taxonomic and environmental information about the group."
       ),
       style = "font-size: 16px; color: #00509D"
     ),
+    p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
     #9B9D9F
-    br(),
     
     actionButton(
       inputId = "help",
       label = "Help",
       icon = icon("circle-question"),
-      onclick = "window.open('https://pr2-database.org/')",
+      onclick = "window.open('https://pr2-database.org/', '_blank')",
       style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
     ),
     
@@ -94,19 +95,18 @@ ui <- fluidPage(sidebarLayout(
     ),
     
     helpText(
-      "If you do not have a tree file you can click on the second option to search for the sequences of the target lineage in the PR2 database. "
+      "If you do not have a tree file you can click on the second option to search for the sequences of the target lineage in the PR2 database."
     ),
-    br(),
     
     conditionalPanel(condition = "input.start == 'file'",
                      fileInput(inputId = "tre",
-                               label = "Choose TRE file:")),
+                               label = "Choose TRE File:")),
     
     conditionalPanel(
       condition = "input.start == 'PR2'",
       selectInput(
         inputId = "tax",
-        label = "Taxonomic category:",
+        label = "Taxonomic Category:",
         choices = c(
           "Domain",
           "Kingdom",
@@ -121,41 +121,47 @@ ui <- fluidPage(sidebarLayout(
       ),
       textInput(
         inputId = "clade",
-        label = "Lineage group of interest:",
+        label = "Lineage Group of Interest:",
         value = "Suessiales"
       ),
       # Help
       # helpText("You can run the example to build a phylogenetic tree
       #        for the order Suessiales, unicellular organisms of the
       #        superclass Dinoflagellata."),
-      br(),
+      
       helpText("Select the file named 'pr2_CLADE.fa'."),
       fluidRow(
-        column(width = 8, fileInput(inputId = "seq", label = "Choose FA file:")),
+        column(width = 8, fileInput(inputId = "seq", label = "Choose FA File:")),
         column(
           width = 4,
           style = "margin-top: 25px;",
-          actionButton("seqbut", "Run pipeline", style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1")
+          actionButton(
+            "seqbut",
+            "Run Pipeline",
+            style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1",
+            icon = icon("circle-play"),
+          )
         )
       ),
       
-      br(),
       helpText("Select the file named 'RAxML_bipartitionsBranchLabels.tre'."),
       fluidRow(
-        column(width = 8, fileInput(inputId = "raxml", label = "Choose TRE file:")),
+        column(width = 8, fileInput(inputId = "raxml", label = "Choose TRE File:")),
         column(
           width = 4,
           style = "margin-top: 25px;",
-          actionButton("trePR2", "Plot tree", style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1")
+          actionButton(
+            "trePR2",
+            "Plot Tree",
+            style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1",
+            icon = icon("tree")
+          )
         )
       ),
-      
     ),
+    p(style = "border-bottom: 1px solid"),
     
-    p("_____________________________"),
-    
-    h3("Phylogenetic tree modifications"),
-    
+    h3("Phylogenetic Tree Modification"),
     fluidRow(
       column(
         width = 8,
@@ -171,12 +177,11 @@ ui <- fluidPage(sidebarLayout(
         actionButton(
           inputId = "rot",
           label = "Rotate",
+          icon = icon("rotate"),
           style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
         )
       )
     ),
-    
-    br(),
     
     fluidRow(
       column(width = 4,
@@ -189,15 +194,15 @@ ui <- fluidPage(sidebarLayout(
         actionButton(
           inputId = "flip",
           label = "Flip",
+          icon = icon("shuffle"),
           style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
         )
-      )
+      ),
     ),
     
-    p("_____________________________"),
-    
-    h3("Phylogenetic tree editions"),
-    div(h4(em("Reroot")), style = "color:#0063B1"),
+    p(style = "border-bottom: 1px solid"),
+    h3("Phylogenetic Tree Editing"),
+    div(h4(em("Reroot:")), style = "color:#0063B1"),
     fluidRow(
       column(
         width = 8,
@@ -218,8 +223,8 @@ ui <- fluidPage(sidebarLayout(
       )
     ),
     
-    br(),
-    div(h4(em("Remove")), style = "color:#0063B1"),
+    p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
+    div(h4(em("Remove:")), style = "color:#0063B1"),
     # helpText("The file must contain the old branch name and tab-separated the
     #          new branch name."),
     fileInput(inputId = "delfile",
@@ -236,12 +241,14 @@ ui <- fluidPage(sidebarLayout(
         actionButton(
           inputId = "remove",
           label = "Remove",
+          icon = icon("trash"),
           style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
         )
       )
     ),
-    br(),
     
+    p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
+    div(h4(em("Modify:")), style = "color:#0063B1"),
     helpText(
       "The modified file has been generated in your directory with the name 'pr2_CLADE_modify.fa'."
     ),
@@ -255,13 +262,15 @@ ui <- fluidPage(sidebarLayout(
         style = "margin-top: 25px;",
         actionButton(
           inputId = "removed",
-          label = "Plot tree",
+          label = "Plot Tree",
+          icon = icon("tree"),
           style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
         )
       )
     ),
     
-    div(h4(em("Rename")), style = "color:#0063B1"),
+    p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
+    div(h4(em("Rename:")), style = "color:#0063B1"),
     helpText(
       "The file must contain the old branch name and tab-separated the
                new branch name."
@@ -279,13 +288,13 @@ ui <- fluidPage(sidebarLayout(
       )
     ),
     
-    p("_____________________________"),
+    p(style = "border-bottom: 1px solid"),
     radioButtons(
       inputId = "save",
-      label = h3("Download reference tree"),
+      label = h3("Download Reference Tree"),
       choices =  list("pdf",
                       "tre"),
-      selected = "Phylogenetic tree"
+      selected = "pdf"
     ),
     downloadButton(
       "down",
@@ -463,11 +472,11 @@ server <- function(input, output) {
     # Attach file
     req(input$start)
     if (input$start == "file") {
-      shiny::validate(need(input$tre, "Input a file!"))
+      shiny::validate(need(input$tre, "Input a File!"))
       treeR <- treeio::read.raxml(input$tre$datapath)
       
       # Visualize tree
-      viz <- treeplot(treeR, "Phylogenetic tree")
+      viz <- treeplot(treeR, "Phylogenetic Tree")
       return(viz)
     }
   })
@@ -481,11 +490,11 @@ server <- function(input, output) {
     # # Attach file
     # req(input$start)
     if (input$trePR2) {
-      shiny::validate(need(input$raxml, "Input a file!"))
+      shiny::validate(need(input$raxml, "Input a File!"))
       treeR <- treeio::read.raxml(input$raxml$datapath)
       
       # Visualize tree
-      viz <- treeplot(treeR, "Phylogenetic tree")
+      viz <- treeplot(treeR, "Phylogenetic Tree")
       return(viz)
     }
   })
@@ -499,7 +508,7 @@ server <- function(input, output) {
     if (input$rot) {
       tree_rot <- ggtree::rotate(fileee(), input$val_rot) +
         geom_hilight(node = input$val_rot, fill = "#0466C8") +
-        ggtitle("Rotated phylogenetic tree")
+        ggtitle("Rotated Phylogenetic Tree")
       tree_rot
     }
   })
@@ -514,7 +523,7 @@ server <- function(input, output) {
       tree_flip <-
         ggtree::flip(fileee(), input$val_f1, input$val_f2) + geom_hilight(node = input$val_f1, fill = "#0466C8") +
         geom_hilight(node = input$val_f2, fill = "#002855") +
-        ggtitle("Flipped phylogenetic tree")
+        ggtitle("Flipped Phylogenetic Tree")
       tree_flip
     }
   })
@@ -528,7 +537,7 @@ server <- function(input, output) {
       t <- ape::root(treeR,
                      node = input$val_root,
                      resolve.root = TRUE)
-      tree_root <- treeplot(t, "Enrooted phylogenetic tree")
+      tree_root <- treeplot(t, "Rerooted Phylogenetic Tree")
       tree_root
     }
   })
@@ -541,7 +550,7 @@ server <- function(input, output) {
     if (input$remove) {
       show_modal_spinner(spin = "fading-circle",
                          color = "#0063B1",
-                         text = "Generating file...")
+                         text = "Generating File...")
       del <- read_excel(input$delfile$datapath, col_names = FALSE)
       del <- as.vector(del[, 1])
       cluster <-
@@ -576,7 +585,7 @@ server <- function(input, output) {
       if (interactive())
         show_modal_spinner(spin = "fading-circle",
                            color = "#0063B1",
-                           text = "Please wait...")
+                           text = "Please Wait...")
       
       # Vsearch
       x <-
@@ -609,6 +618,7 @@ server <- function(input, output) {
             sep = "\n"
           ),
           sep = "\n")
+      
       # MAFFT
       system("mafft --reorder --auto CLADE.cluster2.fa > CLADE_aligned2.fa")
       
@@ -625,7 +635,7 @@ server <- function(input, output) {
       
       # Visualize tree
       viz <-
-        treeplot(treeR, "Phylogenetic tree with removed branches")
+        treeplot(treeR, "Phylogenetic Tree with Removed Branches")
       remove_modal_spinner() # remove it when done
       return(viz)
     }
@@ -640,14 +650,17 @@ server <- function(input, output) {
     # Attach file
     if (input$rename) {
       new_name <-
-        read.table(input$refile$datapath,
-                   quote = "\"",
-                   comment.char = "")
+        read.csv(
+          input$refile$datapath,
+          header = TRUE,
+          quote = "\"",
+          sep = "\t"
+        )
       # replot <- treeplot(treeR, "Phylogenetic tree with renamed branches")
       treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
         new_name$V2
       p_rename <-
-        treeplot(treeR, "Phylogenetic tree with renamed branches")
+        treeplot(treeR, "Phylogenetic Tree with Renamed Branches")
       return(p_rename)
     }
   })
