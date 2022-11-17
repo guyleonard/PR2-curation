@@ -592,6 +592,7 @@ server <- function(input, output) {
                            text = "Please Wait...")
       
       # Vsearch
+      update_modal_spinner(text = "Running VSEARCH Sort...")
       x <-
         c(
           paste(
@@ -602,9 +603,12 @@ server <- function(input, output) {
           )
         )
       system(x)
+
+      update_modal_spinner(text = "Running VSEARCH Cluster...")
       system(
         "vsearch --cluster_smallmem CLADE_sort2.fa --id 0.97 --centroids CLADE.clustered2.fa -uc CLADE2.cluster"
       )
+      #update_modal_progress(1, text = "Finished Running VSEARCH Cluster...")
       
       # Import FA files to DNAbin objects
       clu <- treeio::read.fasta("CLADE.clustered2.fa")
@@ -624,12 +628,18 @@ server <- function(input, output) {
           sep = "\n")
       
       # MAFFT
+      update_modal_spinner(text = "Running MAFFT Alignment...")
       system("mafft --reorder --auto CLADE.cluster2.fa > CLADE_aligned2.fa")
       
+      
       # TrimAl
+      update_modal_spinner(text = "Running TRIMAL...")
       system("trimal -in CLADE_aligned2.fa -out CLADE.trimal2.fa -gt 0.3 -st 0.001")
       
+      
       # RAxML
+      update_modal_spinner(text = "Finished Running RAxML...")
+      system ("rm -f RAxML.*") #raxml complains if previous files are present, so let's clear them
       system(
         "raxmlHPC-PTHREADS-SSE3 -T 4 -m GTRCAT -c 25 -e 0.001 -p 31415 -f a -N 100 -x 02938 -n tre -s CLADE.trimal2.fa"
       )
@@ -639,7 +649,7 @@ server <- function(input, output) {
       
       # Visualize tree
       viz <-
-        treeplot(treeR, "Phylogenetic Tree with Removed Branches")
+        treeplot(treeR, "Phylogenetic Tree with Modified/Removed Branches")
       remove_modal_spinner() # remove it when done
       return(viz)
     }
