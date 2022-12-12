@@ -36,10 +36,9 @@ treeplot <- function(tree, x) {
       color = '#609ECF',
       linesize = .3,
       fontface = "bold"
-    ) + # "plain", "bold", "italic", "bold.italic"
+    ) +
     hexpand(.05) +
     labs(title = x) +
-    
     geom_label(
       aes(x = branch, label = bootstrap),
       fill = 'white',
@@ -86,10 +85,10 @@ ui <- fluidPage(sidebarLayout(
     
     radioButtons(
       inputId = "start",
-      label = h3("Creation of phylogenetic tree"),
+      label = h3("1) Creation of Phylogenetic Tree"),
       choices = c(
-        "Contribute my tree file" = "file",
-        "Search lineage in the PR2 database" = "PR2"
+        "Contribute my Tree File" = "file",
+        "Search Lineage in the PR2 Database" = "PR2"
       ),
       selected = character(0)
     ),
@@ -161,7 +160,33 @@ ui <- fluidPage(sidebarLayout(
     ),
     p(style = "border-bottom: 1px solid"),
     
-    h3("Phylogenetic Tree Modification"),
+    h3("2) Phylogenetic Tree Editing"),
+    div(h4(em("Reroot:")), style = "color:#0063B1"),
+    fluidRow(
+      column(
+        width = 8,
+        numericInput(
+          inputId = "val_root",
+          label = "Node number:",
+          value = 70
+        )
+      ),
+      column(
+        width = 4,
+        style = "margin-top: 25px;",
+        actionButton(
+          inputId = "root",
+          label = "Reroot",
+          icon = icon("arrows-split-up-and-left"),
+          style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
+        )
+      )
+    ),
+    p(style = "border-bottom: 1px solid"),
+    
+    h3("3) Phylogenetic Tree Modification"),
+    
+    div(h4(em("Rotate Node:")), style = "color:#0063B1"),
     fluidRow(
       column(
         width = 8,
@@ -182,7 +207,9 @@ ui <- fluidPage(sidebarLayout(
         )
       )
     ),
+    p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
     
+    div(h4(em("Flip Nodes:")), style = "color:#0063B1"),
     fluidRow(
       column(width = 4,
              numericInput("val_f1", "Node number:", 87)),
@@ -199,25 +226,22 @@ ui <- fluidPage(sidebarLayout(
         )
       ),
     ),
+    p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
     
-    p(style = "border-bottom: 1px solid"),
-    h3("Phylogenetic Tree Editing"),
-    div(h4(em("Reroot:")), style = "color:#0063B1"),
+    div(h4(em("Rename Nodes:")), style = "color:#0063B1"),
+    helpText(
+      "The file must contain the old branch name and tab-separated the
+               new branch name."
+    ),
     fluidRow(
-      column(
-        width = 8,
-        numericInput(
-          inputId = "val_root",
-          label = "Node number:",
-          value = 70
-        )
-      ),
+      column(width = 8, fileInput(inputId = "refile", label = "Choose file:")),
       column(
         width = 4,
         style = "margin-top: 25px;",
         actionButton(
-          inputId = "root",
-          label = "Reroot",
+          inputId = "rename",
+          label = "Rename",
+          icon = icon("file-pen"),
           style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
         )
       )
@@ -264,25 +288,6 @@ ui <- fluidPage(sidebarLayout(
           inputId = "removed",
           label = "Plot Tree",
           icon = icon("tree"),
-          style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
-        )
-      )
-    ),
-    
-    p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
-    div(h4(em("Rename:")), style = "color:#0063B1"),
-    helpText(
-      "The file must contain the old branch name and tab-separated the
-               new branch name."
-    ),
-    fluidRow(
-      column(width = 8, fileInput(inputId = "refile", label = "Choose file:")),
-      column(
-        width = 4,
-        style = "margin-top: 25px;",
-        actionButton(
-          inputId = "rename",
-          label = "Rename",
           style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
         )
       )
@@ -470,46 +475,46 @@ server <- function(input, output) {
   #PRINT TREE
   fileee <- reactive({
     # Attach file
-    req(input$start)
+    #req(input$start)
+    
     if (input$start == "file") {
       shiny::validate(need(input$tre, "Input a File!"))
       treeR <- treeio::read.raxml(input$tre$datapath)
       
-      # Visualize tree
-      viz <- treeplot(treeR, "Phylogenetic Tree")
-      return(viz)
+      return(treeR)
     }
-  })
-  
-  output$tree <- renderPlot({
-    fileee()
-  }) # width = 900, height = 450
-  
-  ### PR2 ###
-  pl2 <- reactive({
-    # # Attach file
-    # req(input$start)
+    
     if (input$trePR2) {
       shiny::validate(need(input$raxml, "Input a File!"))
       treeR <- treeio::read.raxml(input$raxml$datapath)
       
-      # Visualize tree
-      viz <- treeplot(treeR, "Phylogenetic Tree")
-      return(viz)
+      return(treeR)
     }
   })
   
-  output$optdos <- renderPlot({
-    pl2()
+  output$tree <- renderPlot({
+    treeplot(fileee(), "Phylogenetic Tree")
   })
   
   # ROTATE
   rotate_out <- reactive({
     if (input$rot) {
-      tree_rot <- ggtree::rotate(fileee(), input$val_rot) +
-        geom_hilight(node = input$val_rot, fill = "#0466C8") +
-        ggtitle("Rotated Phylogenetic Tree")
-      tree_rot
+      tree <- fileee()
+      total_nodes <- treeio::Nnode(tree, internal.only = FALSE)
+      internal_nodes <- treeio::Nnode(tree, internal.only = FALSE)
+      start_node <- total_nodes - internal_nodes
+      
+      if (isTRUE(input$val_rot > total_nodes)) {
+        shiny::validate("Node number out of range!")
+      }
+      else {
+        viz <- treeplot(tree, "Phylogenetic Tree")
+        
+        tree_rot <- ggtree::rotate(viz, input$val_rot) +
+          geom_hilight(node = input$val_rot, fill = "#0466C8") +
+          ggtitle("Rotated Phylogenetic Tree")
+        tree_rot
+      }
     }
   })
   
@@ -520,13 +525,17 @@ server <- function(input, output) {
   # FLIP
   flip_out <- reactive({
     if (input$flip) {
+      tree <- fileee()
+      viz <- treeplot(tree, "Phylogenetic Tree")
+      
       tree_flip <-
-        ggtree::flip(fileee(), input$val_f1, input$val_f2) + geom_hilight(node = input$val_f1, fill = "#0466C8") +
+        ggtree::flip(viz, input$val_f1, input$val_f2) + geom_hilight(node = input$val_f1, fill = "#0466C8") +
         geom_hilight(node = input$val_f2, fill = "#002855") +
         ggtitle("Flipped Phylogenetic Tree")
       tree_flip
     }
   })
+  
   output$flip <- renderPlot({
     flip_out()
   })
@@ -534,13 +543,15 @@ server <- function(input, output) {
   # REROOT
   root_out <- reactive({
     if (input$root) {
-      t <- ape::root(treeR,
+      tree <- fileee()
+      t <- ape::root(tree,
                      node = input$val_root,
                      resolve.root = TRUE)
       tree_root <- treeplot(t, "Rerooted Phylogenetic Tree")
       tree_root
     }
   })
+  
   output$root <- renderPlot({
     root_out()
   })
@@ -563,9 +574,9 @@ server <- function(input, output) {
           dec = "."
         )
       dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
-      new_clu <- cluster[!cluster$V10 %in% del,]
-      new_clu <- new_clu[!new_clu$V9 %in% del,]
-      new_clu <- new_clu[!duplicated(new_clu$V9),]
+      new_clu <- cluster[!cluster$V10 %in% del, ]
+      new_clu <- new_clu[!new_clu$V9 %in% del, ]
+      new_clu <- new_clu[!duplicated(new_clu$V9), ]
       new_clu <- as.vector(new_clu$V9)
       
       # Export PR2 file
@@ -603,7 +614,7 @@ server <- function(input, output) {
           )
         )
       system(x)
-
+      
       update_modal_spinner(text = "Running VSEARCH Cluster...")
       system(
         "vsearch --cluster_smallmem CLADE_sort2.fa --id 0.97 --centroids CLADE.clustered2.fa -uc CLADE2.cluster"
@@ -674,10 +685,18 @@ server <- function(input, output) {
       # replot <- treeplot(treeR, "Phylogenetic tree with renamed branches")
       #treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
       #  new_name$V2
-      treeR %<+% new_name
-      p_rename <-
-        treeplot(treeR, "Phylogenetic Tree with Renamed Branches")
-      return(p_rename)
+      
+      tree <- fileee()
+      tree_renamed = rename_taxa(tree, new_name, genbank_accession, tax)
+      viz <-
+        treeplot(tree_renamed, "Phylogenetic Tree with Renamed Branches ")
+      
+      #viz %<+% new_name +
+      #  geom_tiplab(aes(label=tax))
+      
+      #p_rename <-
+      #  treeplot(viz, "Phylogenetic Tree with Renamed Branches")
+      return(viz)
     }
   })
   
