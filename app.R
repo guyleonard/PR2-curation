@@ -73,8 +73,7 @@ ui <- fluidPage(sidebarLayout(
       style = "font-size: 16px; color: #00509D"
     ),
     p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
-    #9B9D9F
-    
+
     actionButton(
       inputId = "help",
       label = "Help",
@@ -90,7 +89,7 @@ ui <- fluidPage(sidebarLayout(
         "Contribute my Tree File" = "file",
         "Search Lineage in the PR2 Database" = "PR2"
       ),
-      selected = character(0)
+      #selected = character(1)
     ),
     
     helpText(
@@ -270,8 +269,8 @@ ui <- fluidPage(sidebarLayout(
         )
       )
     ),
-    
     p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
+    
     div(h4(em("Modify:")), style = "color:#0063B1"),
     helpText(
       "The modified file has been generated in your directory with the name 'pr2_CLADE_modify.fa'."
@@ -292,8 +291,8 @@ ui <- fluidPage(sidebarLayout(
         )
       )
     ),
-    
     p(style = "border-bottom: 1px solid"),
+    
     radioButtons(
       inputId = "save",
       label = h3("Download Reference Tree"),
@@ -422,7 +421,7 @@ server <- function(input, output) {
   # PR2
   pl <- reactive({
     if (input$seqbut) {
-      if (interactive())
+      #if (interactive())
         show_modal_spinner(spin = "fading-circle",
                            color = "#0063B1",
                            text = "Please wait...")
@@ -477,15 +476,15 @@ server <- function(input, output) {
     # Attach file
     #req(input$start)
     
-    if (input$start == "file") {
-      shiny::validate(need(input$tre, "Input a File!"))
+    if (isTRUE(input$start == "file")) {
+      shiny::validate(need(input$tre, "Please Select a File!"))
       treeR <- treeio::read.raxml(input$tre$datapath)
       
       return(treeR)
     }
-    
-    if (input$trePR2) {
-      shiny::validate(need(input$raxml, "Input a File!"))
+    else if (isTRUE(input$start == "PR2")) {
+    #if (input$trePR2) {
+      shiny::validate(need(input$raxml, "Please Select a File!"))
       treeR <- treeio::read.raxml(input$raxml$datapath)
       
       return(treeR)
@@ -596,7 +595,7 @@ server <- function(input, output) {
   # MODIFY
   pr2mod <- reactive({
     if (input$removed) {
-      shiny::validate(need(input$prmod, "Input a File!"))
+      shiny::validate(need(input$prmod, "Please Select a File!"))
       if (interactive())
         show_modal_spinner(spin = "fading-circle",
                            color = "#0063B1",
