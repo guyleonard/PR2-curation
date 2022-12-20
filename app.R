@@ -66,6 +66,8 @@ ui <- fluidPage(sidebarLayout(
         width = 72
       ), "PR2 Curation"
     )), style = "text-align: center"),
+    
+    ## Header Information
     p(
       span(
         "PR2 Curation is an application that allows users interested in a particular group of microbial eukaryotes to retrieve all sequences belonging to that group, place those sequences in a phylogenetic tree, and curate taxonomic and environmental information about the group."
@@ -73,7 +75,8 @@ ui <- fluidPage(sidebarLayout(
       style = "font-size: 16px; color: #00509D"
     ),
     p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
-
+    
+    ## Help Button
     actionButton(
       inputId = "help",
       label = "Help",
@@ -81,7 +84,8 @@ ui <- fluidPage(sidebarLayout(
       onclick = "window.open('https://pr2-database.org/', '_blank')",
       style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
     ),
-    
+
+    ## Section 1
     radioButtons(
       inputId = "start",
       label = h3("1) Creation of Phylogenetic Tree"),
@@ -89,17 +93,20 @@ ui <- fluidPage(sidebarLayout(
         "Contribute my Tree File" = "file",
         "Search Lineage in the PR2 Database" = "PR2"
       ),
-      #selected = character(1)
     ),
-    
     helpText(
       "If you do not have a tree file you can click on the second option to search for the sequences of the target lineage in the PR2 database."
     ),
     
-    conditionalPanel(condition = "input.start == 'file'",
-                     fileInput(inputId = "tre",
-                               label = "Choose TRE File:")),
+    # User Tree File
+    conditionalPanel(
+      condition = "input.start == 'file'", 
+      fileInput(
+        inputId = "tre",
+        label = "Choose TRE File:")
+    ),
     
+    # PR2 Pipeline
     conditionalPanel(
       condition = "input.start == 'PR2'",
       selectInput(
@@ -126,7 +133,6 @@ ui <- fluidPage(sidebarLayout(
       # helpText("You can run the example to build a phylogenetic tree
       #        for the order Suessiales, unicellular organisms of the
       #        superclass Dinoflagellata."),
-      
       helpText("Select the file named 'pr2_CLADE.fa'."),
       fluidRow(
         column(width = 8, fileInput(inputId = "seq", label = "Choose FA File:")),
@@ -141,7 +147,6 @@ ui <- fluidPage(sidebarLayout(
           )
         )
       ),
-      
       helpText("Select the file named 'RAxML_bipartitionsBranchLabels.tre'."),
       fluidRow(
         column(width = 8, fileInput(inputId = "raxml", label = "Choose TRE File:")),
@@ -159,7 +164,10 @@ ui <- fluidPage(sidebarLayout(
     ),
     p(style = "border-bottom: 1px solid"),
     
+    ## Section 2
     h3("2) Phylogenetic Tree Editing"),
+    
+    # Reroot
     div(h4(em("Reroot:")), style = "color:#0063B1"),
     fluidRow(
       column(
@@ -183,8 +191,10 @@ ui <- fluidPage(sidebarLayout(
     ),
     p(style = "border-bottom: 1px solid"),
     
+    ## Section 3
     h3("3) Phylogenetic Tree Modification"),
     
+    # Rotate
     div(h4(em("Rotate Node:")), style = "color:#0063B1"),
     fluidRow(
       column(
@@ -208,6 +218,7 @@ ui <- fluidPage(sidebarLayout(
     ),
     p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
     
+    # Flip
     div(h4(em("Flip Nodes:")), style = "color:#0063B1"),
     fluidRow(
       column(width = 4,
@@ -227,6 +238,7 @@ ui <- fluidPage(sidebarLayout(
     ),
     p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
     
+    # Rename
     div(h4(em("Rename Nodes:")), style = "color:#0063B1"),
     helpText(
       "The file must contain the old branch name and tab-separated the
@@ -245,8 +257,9 @@ ui <- fluidPage(sidebarLayout(
         )
       )
     ),
-    
     p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
+    
+    # Remove
     div(h4(em("Remove:")), style = "color:#0063B1"),
     # helpText("The file must contain the old branch name and tab-separated the
     #          new branch name."),
@@ -271,6 +284,7 @@ ui <- fluidPage(sidebarLayout(
     ),
     p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
     
+    # Modify
     div(h4(em("Modify:")), style = "color:#0063B1"),
     helpText(
       "The modified file has been generated in your directory with the name 'pr2_CLADE_modify.fa'."
@@ -293,6 +307,7 @@ ui <- fluidPage(sidebarLayout(
     ),
     p(style = "border-bottom: 1px solid"),
     
+    ## Save
     radioButtons(
       inputId = "save",
       label = h3("Download Reference Tree"),
@@ -300,6 +315,8 @@ ui <- fluidPage(sidebarLayout(
                       "tre"),
       selected = "pdf"
     ),
+    
+    # Download
     downloadButton(
       "down",
       "Download",
@@ -388,13 +405,13 @@ server <- function(input, output) {
   mydf <- reactive({
     group <- switch(
       input$tax,
-      "Domain" = pr2 %>% dplyr::filter(domain == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Domain"  = pr2 %>% dplyr::filter(domain == input$clade)  %>% dplyr::select(genbank_accession, sequence_length, sequence),
       "Kingdom" = pr2 %>% dplyr::filter(kingdom == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Phylum" = pr2 %>% dplyr::filter(phylum == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Class" = pr2 %>% dplyr::filter(class == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Order" = pr2 %>% dplyr::filter(order == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Family" = pr2 %>% dplyr::filter(family == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Genus" = pr2 %>% dplyr::filter(genus == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Phylum"  = pr2 %>% dplyr::filter(phylum == input$clade)  %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Class"   = pr2 %>% dplyr::filter(class == input$clade)   %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Order"   = pr2 %>% dplyr::filter(order == input$clade)   %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Family"  = pr2 %>% dplyr::filter(family == input$clade)  %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Genus"   = pr2 %>% dplyr::filter(genus == input$clade)   %>% dplyr::select(genbank_accession, sequence_length, sequence),
       "Species" = pr2 %>% dplyr::filter(species == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence)
     )
     
@@ -413,7 +430,6 @@ server <- function(input, output) {
       remove_modal_spinner() # remove it when done
     }
   })
-  
   output$pr2 <- renderDataTable({
     taxonomic()
   })
@@ -421,7 +437,7 @@ server <- function(input, output) {
   # PR2
   pl <- reactive({
     if (input$seqbut) {
-      #if (interactive())
+      if (interactive())
         show_modal_spinner(spin = "fading-circle",
                            color = "#0063B1",
                            text = "Please wait...")
@@ -540,15 +556,22 @@ server <- function(input, output) {
   })
   
   # REROOT
-  root_out <- reactive({
-    if (input$root) {
+  root_out <- eventReactive(input$root, {
+    #if (input$root) {
       tree <- fileee()
-      t <- ape::root(tree,
-                     node = input$val_root,
-                     resolve.root = TRUE)
-      tree_root <- treeplot(t, "Rerooted Phylogenetic Tree")
-      tree_root
-    }
+      all_nodes <- treeio::Nnode(tree, internal.only = FALSE)
+      
+      if (isTRUE(input$val_root > all_nodes)) {
+        shiny::validate(paste0("Error: Node number should be less than or equal to ", all_nodes, "!"))
+      }
+      else {
+        t <- ape::root(tree,
+                       node = input$val_root,
+                       resolve.root = TRUE)
+        tree_root <- treeplot(t, "Rerooted Phylogenetic Tree")
+        tree_root
+      }
+   #}
   })
   
   output$root <- renderPlot({
