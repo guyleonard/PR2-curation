@@ -557,7 +557,6 @@ server <- function(input, output) {
   
   # REROOT
   root_out <- eventReactive(input$root, {
-    #if (input$root) {
       tree <- fileee()
       all_nodes <- treeio::Nnode(tree, internal.only = FALSE)
       
@@ -571,7 +570,6 @@ server <- function(input, output) {
         tree_root <- treeplot(t, "Rerooted Phylogenetic Tree")
         tree_root
       }
-   #}
   })
   
   output$root <- renderPlot({
