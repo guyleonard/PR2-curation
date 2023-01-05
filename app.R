@@ -512,8 +512,8 @@ server <- function(input, output) {
   })
   
   # ROTATE
-  rotate_out <- reactive({
-    if (input$rot) {
+  rotate_out <- eventReactive(input$rot, {
+    #if (input$rot) {
       tree <- fileee()
       total_nodes <- treeio::Nnode(tree, internal.only = FALSE)
       internal_nodes <- treeio::Nnode(tree, internal.only = FALSE)
@@ -530,7 +530,7 @@ server <- function(input, output) {
           ggtitle("Rotated Phylogenetic Tree")
         tree_rot
       }
-    }
+    #}
   })
   
   output$rotate <- renderPlot({
@@ -538,8 +538,8 @@ server <- function(input, output) {
   })
   
   # FLIP
-  flip_out <- reactive({
-    if (input$flip) {
+  flip_out <- eventReactive(input$flip, {
+    #if (input$flip) {
       tree <- fileee()
       viz <- treeplot(tree, "Phylogenetic Tree")
       
@@ -548,7 +548,7 @@ server <- function(input, output) {
         geom_hilight(node = input$val_f2, fill = "#002855") +
         ggtitle("Flipped Phylogenetic Tree")
       tree_flip
-    }
+    #}
   })
   
   output$flip <- renderPlot({
