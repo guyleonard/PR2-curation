@@ -90,7 +90,7 @@ ui <- fluidPage(sidebarLayout(
       inputId = "start",
       label = h3("1) Creation of Phylogenetic Tree"),
       choices = c(
-        "Contribute my Tree File" = "file",
+        "Contribute User Tree File" = "file",
         "Search Lineage in the PR2 Database" = "PR2"
       ),
     ),
@@ -98,22 +98,19 @@ ui <- fluidPage(sidebarLayout(
       "If you do not have a tree file you can click on the second option to search for the sequences of the target lineage in the PR2 database."
     ),
     
-    
     # User Tree File
     conditionalPanel(
-      p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
       condition = "input.start == 'file'",
-      fileInput(inputId = "tre",
-                label = "Choose TRE File:")
+      p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
     ),
     
     # PR2 Pipeline
     conditionalPanel(
+      condition = "input.start == 'PR2'",
       p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
       helpText(
         "A) Choose your taxonomic category and lineage group, then click 'Generate'."
       ),
-      condition = "input.start == 'PR2'",
       selectInput(
         inputId = "tax",
         label = "Taxonomic Category:",
@@ -169,20 +166,37 @@ ui <- fluidPage(sidebarLayout(
       helpText(
         "C) Select the file named 'RAxML_bipartitionsBranchLabels.tre'."
       ),
-      fluidRow(
-        column(width = 8,
-               fileInput(inputId = "raxml", label = "Choose Tree File:")),
-        column(
-          width = 4,
-          style = "margin-top: 25px;",
-          actionButton(
-            inputId = "trePR2",
-            label = "Plot Tree",
-            style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1",
-            icon = icon("tree")
-          )
+      #   fluidRow(
+      #     column(
+      #       width = 8,
+      #       fileInput(inputId = "raxml", label = "Choose RAxML Tree File:")
+      #     ),
+      #     column(
+      #       width = 4,
+      #       style = "margin-top: 25px;",
+      #       actionButton(
+      #         inputId = "treRaxml",
+      #         label = "Plot Tree",
+      #         style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1",
+      #         icon = icon("tree")
+      #       )
+      #     )
+      #   ),
+    ),
+    
+    fluidRow(
+      column(width = 8,
+             fileInput(inputId = "tre", label = "Choose Tree File:")),
+      column(
+        width = 4,
+        style = "margin-top: 25px;",
+        actionButton(
+          inputId = "treUser",
+          label = "Plot Tree",
+          style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1",
+          icon = icon("tree")
         )
-      ),
+      )
     ),
     p(style = "border-bottom: 1px solid"),
     
@@ -378,8 +392,8 @@ server <- function(input, output) {
     return(ui)
   })
   
-  observeEvent(input$start,
-               ChartOrder(PutChartOnTop("tree", ChartOrder())))
+  # observeEvent(input$start,
+  #              ChartOrder(PutChartOnTop("tree", ChartOrder())))
   
   observeEvent(input$val_root | input$root,
                ChartOrder(PutChartOnTop("root", ChartOrder())))
@@ -420,18 +434,9 @@ server <- function(input, output) {
                  }
                })
   
-  observeEvent(input$trePR2,
-               {
-                 if (input$trePR2) {
-                   ChartOrder(PutChartOnTop("optdos", ChartOrder()))
-                 } else {
-                   ChartOrder(ChartOrder()[ChartOrder() != "optdos"])
-                 }
-               })
-  
-  observeEvent(input$seqbut, {
-    pl()
-  })
+  # observeEvent(input$seqbut, {
+  #   pl()
+  # })
   
   # Input SelectBox and TextInput
   mydf <- reactive({
@@ -454,26 +459,22 @@ server <- function(input, output) {
   
   # Function: convert p
   taxonomic <- eventReactive(input$pr2clade, {
-    #req(input$start)
-    #if (isTRUE(input$start == "PR2")) {
-    shiny::validate(need(input$clade, "Input Correct Taxonomy and Clade Name."))
+    shiny::validate(need(input$clade, "Input Taxonomy and Clade Name."))
     show_modal_spinner(spin = "fading-circle",
                        color = "#0063B1",
-                       text = "Please wait...!!!")
+                       text = "Generating pr2_CLADE.fa in your Home Directory!")
     
     seq_clade(mydf())
     remove_modal_spinner() # remove it when done
-    #}
   })
   output$pr2 <- renderDataTable({
     taxonomic()
-    
   })
   
   # PR2
   pl <- eventReactive(input$seqbut, {
-    #if (input$seqbut) {
-    #if (interactive())
+    shiny::validate(need(input$seq, "Please Select a pr2_CLADE.fa File!"))
+    
     show_modal_spinner(spin = "fading-circle",
                        color = "#0063B1",
                        text = "Please wait...")
@@ -487,7 +488,6 @@ server <- function(input, output) {
         "--output CLADE_sort.fa --minseqlength 500 -notrunclabels",
         sep = " "
       )
-    #)
     system(x)
     
     update_modal_spinner(text = "Running VSEARCH Cluster...")
@@ -528,28 +528,18 @@ server <- function(input, output) {
     remove_modal_spinner() # remove it when done
     #}
   })
+  output$pr2 <- renderPlot({
+    pl()
+  })
   
-  # PRINT TREE
-  fileee <- reactive({
-    # Attach file
-    #req(input$start)
-    
-    if (isTRUE(input$start == "file")) {
-      shiny::validate(need(input$tre, "Please Select a File!"))
-      treeR <- treeio::read.raxml(input$tre$datapath)
-      
-      return(treeR)
-    }
-    else if (isTRUE(input$start == "PR2")) {
-      #if (input$trePR2) {
-      shiny::validate(need(input$raxml, "Please Select a File!"))
-      treeR <- treeio::read.raxml(input$raxml$datapath)
-      
-      return(treeR)
-    }
+  # PRINT TREES
+  user_tree <- eventReactive(input$treUser, {
+    shiny::validate(need(input$tre, "Please Select a Tree File!"))
+    user_treeR <- treeio::read.raxml(input$tre$datapath)
+    treeplot(user_treeR, "Phylogenetic Tree")
   })
   output$tree <- renderPlot({
-    treeplot(fileee(), "Phylogenetic Tree")
+    user_tree()
   })
   
   # ROTATE
