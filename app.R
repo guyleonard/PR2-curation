@@ -535,17 +535,17 @@ server <- function(input, output) {
   # PRINT TREES
   user_tree <- eventReactive(input$treUser, {
     shiny::validate(need(input$tre, "Please Select a Tree File!"))
-    user_treeR <- treeio::read.raxml(input$tre$datapath)
-    treeplot(user_treeR, "Phylogenetic Tree")
+    treeR <- treeio::read.raxml(input$tre$datapath)
+    return(treeR)
   })
   output$tree <- renderPlot({
-    user_tree()
+    treeplot(user_tree(), "Phylogenetic Tree")
   })
   
   # ROTATE
   rotate_out <- eventReactive(input$rot, {
     #if (input$rot) {
-    tree <- fileee()
+    tree <- user_tree()
     total_nodes <- treeio::Nnode(tree, internal.only = FALSE)
     internal_nodes <- treeio::Nnode(tree, internal.only = FALSE)
     start_node <- total_nodes - internal_nodes
