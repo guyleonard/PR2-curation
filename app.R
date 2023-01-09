@@ -630,9 +630,9 @@ server <- function(input, output) {
     
     dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
     
-    new_clu <- cluster[!cluster$V10 %in% del,]
-    new_clu <- new_clu[!new_clu$V9 %in% del,]
-    new_clu <- new_clu[!duplicated(new_clu$V9),]
+    new_clu <- cluster[!cluster$V10 %in% del, ]
+    new_clu <- new_clu[!new_clu$V9 %in% del, ]
+    new_clu <- new_clu[!duplicated(new_clu$V9), ]
     new_clu <- as.vector(new_clu$V9)
     
     # Export PR2 file
@@ -649,12 +649,11 @@ server <- function(input, output) {
   
   # MODIFY
   pr2mod <- eventReactive(input$removed, {
-    #if (input$removed) {
-    shiny::validate(need(input$prmod, "Please Select a File!"))
-    if (interactive())
-      show_modal_spinner(spin = "fading-circle",
-                         color = "#0063B1",
-                         text = "Please Wait...!!")
+    shiny::validate(need(input$prmod, "Please Select the pr2_CLADE_modify.fa File!"))
+    
+    show_modal_spinner(spin = "fading-circle",
+                       color = "#0063B1",
+                       text = "Please Wait...!!")
     
     # Vsearch
     update_modal_spinner(text = "Running VSEARCH Sort by Length...")
@@ -663,7 +662,7 @@ server <- function(input, output) {
       paste(
         "vsearch --sortbylength",
         input$prmod$datapath,
-        "--output CLADE_sort2.fa --minseqlength 500 -notrunclabels",
+        "--output CLADE_modify_sort.fa --minseqlength 500 -notrunclabels",
         sep = " "
       )
     #)
@@ -671,18 +670,18 @@ server <- function(input, output) {
     
     update_modal_spinner(text = "Running VSEARCH Cluster...")
     system(
-      "vsearch --cluster_smallmem CLADE_sort2.fa --id 0.97 --centroids CLADE.clustered2.fa -uc CLADE2.cluster"
+      "vsearch --cluster_smallmem CLADE_modify_sort.fa --id 0.97 --centroids CLADE_modify.clustered.fa -uc CLADE_modify.cluster"
     )
     
     # Import FA files to DNAbin objects
-    clu <- treeio::read.fasta("CLADE.clustered2.fa")
+    clu <- treeio::read.fasta("CLADE_modify.clustered.fa")
     out <- treeio::read.fasta("outgroup.fa")
     
     # Concatenate the files
     file <- insect::join(clu, out)
     
     # Saving the sequences as a FA file
-    cat(file = "CLADE.cluster2.fa",
+    cat(file = "CLADE_modify.cluster.fa",
         paste(paste0(">", names(file)),
               sapply(file, paste, collapse =
                        ""),
@@ -691,17 +690,17 @@ server <- function(input, output) {
     
     # MAFFT
     update_modal_spinner(text = "Running MAFFT Alignment...")
-    system("mafft --reorder --auto CLADE.cluster2.fa > CLADE_aligned2.fa")
+    system("mafft --reorder --auto CLADE_modify.cluster.fa > CLADE_modify_aligned.fa")
     
     # TrimAl
     update_modal_spinner(text = "Running TRIMAL...")
-    system("trimal -in CLADE_aligned2.fa -out CLADE.trimal2.fa -gt 0.3 -st 0.001")
+    system("trimal -in CLADE_modify_aligned.fa -out CLADE_modify.trimal.fa -gt 0.3 -st 0.001")
     
     # RAxML
     update_modal_spinner(text = "Running RAxML...")
-    system ("rm -f RAxML.*") #raxml complains if previous files are present, so let's clear them
+    system ("rm -f RAxML_*") #raxml complains if previous files are present, so let's clear them
     system(
-      "raxmlHPC-PTHREADS-SSE3 -T 4 -m GTRCAT -c 25 -e 0.001 -p 31415 -f a -N 100 -x 02938 -n tre -s CLADE.trimal2.fa"
+      "raxmlHPC-PTHREADS-SSE3 -T 4 -m GTRCAT -c 25 -e 0.001 -p 31415 -f a -N 100 -x 02938 -n tre -s CLADE_modify.trimal.fa"
     )
     
     treeR <-
