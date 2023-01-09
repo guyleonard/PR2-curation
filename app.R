@@ -617,8 +617,8 @@ server <- function(input, output) {
                        color = "#0063B1",
                        text = "Generating pr2_CLADE_modify.fa File...")
     
-    del <- read_excel(input$delfile$datapath, col_names = FALSE)
-    del <- del$...1
+    del <- read_excel(input$delfile$datapath, col_names = 'list')
+    del <- del$list
     
     cluster <-
       read.delim(
