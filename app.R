@@ -608,109 +608,111 @@ server <- function(input, output) {
   })
   
   # REMOVE
-  removee <- reactive({
-    if (input$remove) {
-      shiny::validate(need(input$delfile, "Input a File!"))
-      show_modal_spinner(spin = "fading-circle",
-                         color = "#0063B1",
-                         text = "Generating File...")
-      
-      del <- read_excel(input$delfile$datapath, col_names = FALSE)
-      del <- as.vector(del[, 1])
-      cluster <-
-        read.delim(
-          input$clufile$datapath,
-          header = FALSE,
-          sep = "\t",
-          dec = "."
-        )
-      dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
-      new_clu <- cluster[!cluster$V10 %in% del,]
-      new_clu <- new_clu[!new_clu$V9 %in% del,]
-      new_clu <- new_clu[!duplicated(new_clu$V9),]
-      new_clu <- as.vector(new_clu$V9)
-      
-      # Export PR2 file
-      seq <- names(dataset)
-      new_data <- dataset[seq %in% new_clu]
-      
-      # Saving the sequences as a FA file
-      Biostrings::writeXStringSet(new_data, "~/pr2_CLADE_modify.fa", width = 80)
-      remove_modal_spinner() # remove it when done
-    }
+  removee <- eventReactive(input$remove, {
+    shiny::validate(need(input$delfile, "Input a Remove File!"))
+    shiny::validate(need(input$clufile, "Input a Cluster File!"))
+    shiny::validate(need(input$prfile, "Input a pr2_CLADE.fa File!"))
+    
+    show_modal_spinner(spin = "fading-circle",
+                       color = "#0063B1",
+                       text = "Generating pr2_CLADE_modify.fa File...")
+    
+    del <- read_excel(input$delfile$datapath, col_names = FALSE)
+    del <- del$...1
+    
+    cluster <-
+      read.delim(
+        input$clufile$datapath,
+        header = FALSE,
+        sep = "\t",
+        dec = "."
+      )
+    
+    dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
+
+    new_clu <- cluster[!cluster$V10 %in% del, ]
+    new_clu <- new_clu[!new_clu$V9 %in% del, ]
+    new_clu <- new_clu[!duplicated(new_clu$V9), ]
+    new_clu <- as.vector(new_clu$V9)
+    
+    # Export PR2 file
+    seq <- names(dataset)
+    new_data <- dataset[seq %in% new_clu]
+    
+    # Saving the sequences as a FA file
+    Biostrings::writeXStringSet(new_data, "~/pr2_CLADE_modify.fa", width = 80)
+    remove_modal_spinner() # remove it when done
   })
   output$pipeline <- renderText({
     removee()
   })
   
   # MODIFY
-  pr2mod <- reactive({
-    if (input$removed) {
-      shiny::validate(need(input$prmod, "Please Select a File!"))
-      if (interactive())
-        show_modal_spinner(spin = "fading-circle",
-                           color = "#0063B1",
-                           text = "Please Wait...!!")
-      
-      # Vsearch
-      update_modal_spinner(text = "Running VSEARCH Sort by Length...")
-      x <-
-        #c(
-        paste(
-          "vsearch --sortbylength",
-          input$prmod$datapath,
-          "--output CLADE_sort2.fa --minseqlength 500 -notrunclabels",
-          sep = " "
-        )
-      #)
-      system(x)
-      
-      update_modal_spinner(text = "Running VSEARCH Cluster...")
-      system(
-        "vsearch --cluster_smallmem CLADE_sort2.fa --id 0.97 --centroids CLADE.clustered2.fa -uc CLADE2.cluster"
+  pr2mod <- eventReactive(input$removed, {
+    #if (input$removed) {
+    shiny::validate(need(input$prmod, "Please Select a File!"))
+    if (interactive())
+      show_modal_spinner(spin = "fading-circle",
+                         color = "#0063B1",
+                         text = "Please Wait...!!")
+    
+    # Vsearch
+    update_modal_spinner(text = "Running VSEARCH Sort by Length...")
+    x <-
+      #c(
+      paste(
+        "vsearch --sortbylength",
+        input$prmod$datapath,
+        "--output CLADE_sort2.fa --minseqlength 500 -notrunclabels",
+        sep = " "
       )
-      
-      # Import FA files to DNAbin objects
-      clu <- treeio::read.fasta("CLADE.clustered2.fa")
-      out <- treeio::read.fasta("outgroup.fa")
-      
-      # Concatenate the files
-      file <- insect::join(clu, out)
-      
-      # Saving the sequences as a FA file
-      cat(file = "CLADE.cluster2.fa",
-          paste(
-            paste0(">", names(file)),
-            sapply(file, paste, collapse =
-                     ""),
-            sep = "\n"
-          ),
-          sep = "\n")
-      
-      # MAFFT
-      update_modal_spinner(text = "Running MAFFT Alignment...")
-      system("mafft --reorder --auto CLADE.cluster2.fa > CLADE_aligned2.fa")
-      
-      # TrimAl
-      update_modal_spinner(text = "Running TRIMAL...")
-      system("trimal -in CLADE_aligned2.fa -out CLADE.trimal2.fa -gt 0.3 -st 0.001")
-      
-      # RAxML
-      update_modal_spinner(text = "Running RAxML...")
-      system ("rm -f RAxML.*") #raxml complains if previous files are present, so let's clear them
-      system(
-        "raxmlHPC-PTHREADS-SSE3 -T 4 -m GTRCAT -c 25 -e 0.001 -p 31415 -f a -N 100 -x 02938 -n tre -s CLADE.trimal2.fa"
-      )
-      
-      treeR <-
-        treeio::read.raxml("RAxML_bipartitionsBranchLabels.tre")
-      
-      # Visualize tree
-      viz <-
-        treeplot(treeR, "Phylogenetic Tree with Modified/Removed Branches")
-      remove_modal_spinner() # remove it when done
-      return(viz)
-    }
+    #)
+    system(x)
+    
+    update_modal_spinner(text = "Running VSEARCH Cluster...")
+    system(
+      "vsearch --cluster_smallmem CLADE_sort2.fa --id 0.97 --centroids CLADE.clustered2.fa -uc CLADE2.cluster"
+    )
+    
+    # Import FA files to DNAbin objects
+    clu <- treeio::read.fasta("CLADE.clustered2.fa")
+    out <- treeio::read.fasta("outgroup.fa")
+    
+    # Concatenate the files
+    file <- insect::join(clu, out)
+    
+    # Saving the sequences as a FA file
+    cat(file = "CLADE.cluster2.fa",
+        paste(paste0(">", names(file)),
+              sapply(file, paste, collapse =
+                       ""),
+              sep = "\n"),
+        sep = "\n")
+    
+    # MAFFT
+    update_modal_spinner(text = "Running MAFFT Alignment...")
+    system("mafft --reorder --auto CLADE.cluster2.fa > CLADE_aligned2.fa")
+    
+    # TrimAl
+    update_modal_spinner(text = "Running TRIMAL...")
+    system("trimal -in CLADE_aligned2.fa -out CLADE.trimal2.fa -gt 0.3 -st 0.001")
+    
+    # RAxML
+    update_modal_spinner(text = "Running RAxML...")
+    system ("rm -f RAxML.*") #raxml complains if previous files are present, so let's clear them
+    system(
+      "raxmlHPC-PTHREADS-SSE3 -T 4 -m GTRCAT -c 25 -e 0.001 -p 31415 -f a -N 100 -x 02938 -n tre -s CLADE.trimal2.fa"
+    )
+    
+    treeR <-
+      treeio::read.raxml("RAxML_bipartitionsBranchLabels.tre")
+    
+    # Visualize tree
+    viz <-
+      treeplot(treeR, "Phylogenetic Tree with Modified/Removed Branches")
+    remove_modal_spinner() # remove it when done
+    return(viz)
+    #}
   })
   output$remove <- renderPlot({
     pr2mod()
@@ -733,19 +735,17 @@ server <- function(input, output) {
       #  new_name$V2
       
       tree <- user_tree()
-      tree_renamed = rename_taxa(tree, new_name, genbank_accession, tax)
+      #tree_renamed = rename_taxa(tree, new_name, genbank_accession, tax)
       viz <-
-        treeplot(tree_renamed, "Phylogenetic Tree with Renamed Branches ")
+        treeplot(tree, "Phylogenetic Tree with Renamed Branches ")
       
-      #viz %<+% new_name +
-      #  geom_tiplab(aes(label=tax))
-      
+      viz %<+% new_name + geom_tiplab(aes(label = tax))
+      viz
       #p_rename <-
       #  treeplot(viz, "Phylogenetic Tree with Renamed Branches")
-      return(viz)
+      #return(viz)
     }
   })
-  
   output$rename <- renderPlot({
     renamee()
   })
