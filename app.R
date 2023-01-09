@@ -84,7 +84,7 @@ ui <- fluidPage(sidebarLayout(
       onclick = "window.open('https://pr2-database.org/', '_blank')",
       style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
     ),
-
+    
     ## Section 1
     radioButtons(
       inputId = "start",
@@ -98,16 +98,21 @@ ui <- fluidPage(sidebarLayout(
       "If you do not have a tree file you can click on the second option to search for the sequences of the target lineage in the PR2 database."
     ),
     
+    
     # User Tree File
     conditionalPanel(
-      condition = "input.start == 'file'", 
-      fileInput(
-        inputId = "tre",
-        label = "Choose TRE File:")
+      p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
+      condition = "input.start == 'file'",
+      fileInput(inputId = "tre",
+                label = "Choose TRE File:")
     ),
     
     # PR2 Pipeline
     conditionalPanel(
+      p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
+      helpText(
+        "A) Choose your taxonomic category and lineage group, then click 'Generate'."
+      ),
       condition = "input.start == 'PR2'",
       selectInput(
         inputId = "tax",
@@ -124,38 +129,55 @@ ui <- fluidPage(sidebarLayout(
         ),
         selected = "Order"
       ),
-      textInput(
-        inputId = "clade",
-        label = "Lineage Group of Interest:",
-        value = "Suessiales"
-      ),
-      # Help
-      # helpText("You can run the example to build a phylogenetic tree
-      #        for the order Suessiales, unicellular organisms of the
-      #        superclass Dinoflagellata."),
-      helpText("Select the file named 'pr2_CLADE.fa'."),
       fluidRow(
-        column(width = 8, fileInput(inputId = "seq", label = "Choose FA File:")),
+        column(
+          width = 8,
+          textInput(
+            inputId = "clade",
+            label = "Lineage Group of Interest:",
+            value = "Suessiales"
+          )
+        ),
         column(
           width = 4,
           style = "margin-top: 25px;",
           actionButton(
-            "seqbut",
-            "Run Pipeline",
+            inputId = "pr2clade",
+            label = "Generate",
             style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1",
-            icon = icon("circle-play"),
+            icon = icon("file-export")
           )
         )
       ),
-      helpText("Select the file named 'RAxML_bipartitionsBranchLabels.tre'."),
+      
+      helpText("B) Select the newly generated file named 'pr2_CLADE.fa'."),
       fluidRow(
-        column(width = 8, fileInput(inputId = "raxml", label = "Choose TRE File:")),
+        column(width = 8,
+               fileInput(inputId = "seq", label = "Choose FA File:")),
         column(
           width = 4,
           style = "margin-top: 25px;",
           actionButton(
-            "trePR2",
-            "Plot Tree",
+            inputId = "seqbut",
+            label = "Run Pipeline",
+            style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1",
+            icon = icon("circle-play")
+          )
+        )
+      ),
+      
+      helpText(
+        "C) Select the file named 'RAxML_bipartitionsBranchLabels.tre'."
+      ),
+      fluidRow(
+        column(width = 8,
+               fileInput(inputId = "raxml", label = "Choose Tree File:")),
+        column(
+          width = 4,
+          style = "margin-top: 25px;",
+          actionButton(
+            inputId = "trePR2",
+            label = "Plot Tree",
             style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1",
             icon = icon("tree")
           )
@@ -166,6 +188,7 @@ ui <- fluidPage(sidebarLayout(
     
     ## Section 2
     h3("2) Phylogenetic Tree Editing"),
+    helpText("Rerooting must be done before other tree manipulations."),
     
     # Reroot
     div(h4(em("Reroot:")), style = "color:#0063B1"),
@@ -257,7 +280,10 @@ ui <- fluidPage(sidebarLayout(
         )
       )
     ),
-    p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
+    p(style = "border-bottom: 1px solid"),
+    
+    ## Section 4
+    h3("4a) Remove Taxa"),
     
     # Remove
     div(h4(em("Remove:")), style = "color:#0063B1"),
@@ -282,7 +308,9 @@ ui <- fluidPage(sidebarLayout(
         )
       )
     ),
-    p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
+    p(style = "border-bottom: 1px solid"),
+    
+    h3("4b) Modify Tree Pipeline"),
     
     # Modify
     div(h4(em("Modify:")), style = "color:#0063B1"),
@@ -401,17 +429,23 @@ server <- function(input, output) {
                  }
                })
   
+  observeEvent(input$seqbut, {
+    pl()
+  })
+  
   # Input SelectBox and TextInput
   mydf <- reactive({
+    pr2 <- pr2_database()
+    
     group <- switch(
       input$tax,
-      "Domain"  = pr2 %>% dplyr::filter(domain == input$clade)  %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Domain"  = pr2 %>% dplyr::filter(domain  == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
       "Kingdom" = pr2 %>% dplyr::filter(kingdom == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Phylum"  = pr2 %>% dplyr::filter(phylum == input$clade)  %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Class"   = pr2 %>% dplyr::filter(class == input$clade)   %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Order"   = pr2 %>% dplyr::filter(order == input$clade)   %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Family"  = pr2 %>% dplyr::filter(family == input$clade)  %>% dplyr::select(genbank_accession, sequence_length, sequence),
-      "Genus"   = pr2 %>% dplyr::filter(genus == input$clade)   %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Phylum"  = pr2 %>% dplyr::filter(phylum  == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Class"   = pr2 %>% dplyr::filter(class   == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Order"   = pr2 %>% dplyr::filter(order   == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Family"  = pr2 %>% dplyr::filter(family  == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
+      "Genus"   = pr2 %>% dplyr::filter(genus   == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence),
       "Species" = pr2 %>% dplyr::filter(species == input$clade) %>% dplyr::select(genbank_accession, sequence_length, sequence)
     )
     
@@ -419,75 +453,83 @@ server <- function(input, output) {
   })
   
   # Function: convert p
-  taxonomic <- reactive({
-    req(input$start)
-    if (input$start == "PR2") {
-      shiny::validate(need(input$clade, "Input correct taxonomy and name."))
-      show_modal_spinner(spin = "fading-circle",
-                         color = "#0063B1",
-                         text = "Please wait...")
-      seq_clade(mydf())
-      remove_modal_spinner() # remove it when done
-    }
+  taxonomic <- eventReactive(input$pr2clade, {
+    #req(input$start)
+    #if (isTRUE(input$start == "PR2")) {
+    shiny::validate(need(input$clade, "Input Correct Taxonomy and Clade Name."))
+    show_modal_spinner(spin = "fading-circle",
+                       color = "#0063B1",
+                       text = "Please wait...!!!")
+    
+    seq_clade(mydf())
+    remove_modal_spinner() # remove it when done
+    #}
   })
   output$pr2 <- renderDataTable({
     taxonomic()
+    
   })
   
   # PR2
-  pl <- reactive({
-    if (input$seqbut) {
-      if (interactive())
-        show_modal_spinner(spin = "fading-circle",
-                           color = "#0063B1",
-                           text = "Please wait...")
-      # Vsearch
-      x <-
-        c(
-          paste(
-            "vsearch --sortbylength",
-            input$seq$datapath,
-            "--output CLADE_sort.fa --minseqlength 500 -notrunclabels",
-            sep = " "
-          )
-        )
-      system(x)
-      system(
-        "vsearch --cluster_smallmem CLADE_sort.fa --id 0.97 --centroids CLADE.clustered.fa -uc CLADE.cluster"
+  pl <- eventReactive(input$seqbut, {
+    #if (input$seqbut) {
+    #if (interactive())
+    show_modal_spinner(spin = "fading-circle",
+                       color = "#0063B1",
+                       text = "Please wait...")
+    # Vsearch
+    update_modal_spinner(text = "Running VSEARCH Sort by Length...")
+    x <-
+      #c(
+      paste(
+        "vsearch --sortbylength",
+        input$seq$datapath,
+        "--output CLADE_sort.fa --minseqlength 500 -notrunclabels",
+        sep = " "
       )
-      
-      # Import FA files to DNAbin objects
-      clu <- treeio::read.fasta("CLADE.clustered.fa")
-      out <- treeio::read.fasta("outgroup.fa")
-      
-      # Concatenate the files
-      file <- insect::join(clu, out)
-      
-      # Saving the sequences as a FA file
-      cat(file = "CLADE.cluster.fa",
-          paste(
-            paste0(">", names(file)),
-            sapply(file, paste, collapse =
-                     ""),
-            sep = "\n"
-          ),
-          sep = "\n")
-      # MAFFT
-      system("mafft --reorder --auto CLADE.cluster.fa > CLADE_aligned.fa")
-      
-      # TrimAl
-      system("trimal -in CLADE_aligned.fa -out CLADE.trimal.fa -gt 0.3 -st 0.001")
-      
-      # RAxML
-      system(
-        "raxmlHPC-PTHREADS-SSE3 -T 4 -m GTRCAT -c 25 -e 0.001 -p 31415 -f a -N 100 -x 02938 -n tre -s CLADE.trimal.fa"
-      )
-      
-      remove_modal_spinner() # remove it when done
-    }
+    #)
+    system(x)
+    
+    update_modal_spinner(text = "Running VSEARCH Cluster...")
+    system(
+      "vsearch --cluster_smallmem CLADE_sort.fa --id 0.97 --centroids CLADE.clustered.fa -uc CLADE.cluster"
+    )
+    
+    # Import FA files to DNAbin objects
+    clu <- treeio::read.fasta("CLADE.clustered.fa")
+    out <- treeio::read.fasta("outgroup.fa")
+    
+    # Concatenate the files
+    file <- insect::join(clu, out)
+    
+    # Saving the sequences as a FA file
+    cat(file = "CLADE.cluster.fa",
+        paste(paste0(">", names(file)),
+              sapply(file, paste, collapse =
+                       ""),
+              sep = "\n"),
+        sep = "\n")
+    
+    # MAFFT
+    update_modal_spinner(text = "Running MAFFT Alignment...")
+    system("mafft --reorder --auto CLADE.cluster.fa > CLADE_aligned.fa")
+    
+    # TrimAl
+    update_modal_spinner(text = "Running TRIMAL...")
+    system("trimal -in CLADE_aligned.fa -out CLADE.trimal.fa -gt 0.3 -st 0.001")
+    
+    # RAxML
+    update_modal_spinner(text = "Running RAxML...")
+    system ("rm -f RAxML_*") #raxml complains if previous files are present, so let's clear them
+    system(
+      "raxmlHPC-PTHREADS-SSE3 -T 4 -m GTRCAT -c 25 -e 0.001 -p 31415 -f a -N 100 -x 02938 -n tre -s CLADE.trimal.fa"
+    )
+    
+    remove_modal_spinner() # remove it when done
+    #}
   })
   
-  #PRINT TREE
+  # PRINT TREE
   fileee <- reactive({
     # Attach file
     #req(input$start)
@@ -499,14 +541,13 @@ server <- function(input, output) {
       return(treeR)
     }
     else if (isTRUE(input$start == "PR2")) {
-    #if (input$trePR2) {
+      #if (input$trePR2) {
       shiny::validate(need(input$raxml, "Please Select a File!"))
       treeR <- treeio::read.raxml(input$raxml$datapath)
       
       return(treeR)
     }
   })
-  
   output$tree <- renderPlot({
     treeplot(fileee(), "Phylogenetic Tree")
   })
@@ -514,25 +555,24 @@ server <- function(input, output) {
   # ROTATE
   rotate_out <- eventReactive(input$rot, {
     #if (input$rot) {
-      tree <- fileee()
-      total_nodes <- treeio::Nnode(tree, internal.only = FALSE)
-      internal_nodes <- treeio::Nnode(tree, internal.only = FALSE)
-      start_node <- total_nodes - internal_nodes
+    tree <- fileee()
+    total_nodes <- treeio::Nnode(tree, internal.only = FALSE)
+    internal_nodes <- treeio::Nnode(tree, internal.only = FALSE)
+    start_node <- total_nodes - internal_nodes
+    
+    if (isTRUE(input$val_rot > total_nodes)) {
+      shiny::validate("Node number out of range!")
+    }
+    else {
+      viz <- treeplot(tree, "Phylogenetic Tree")
       
-      if (isTRUE(input$val_rot > total_nodes)) {
-        shiny::validate("Node number out of range!")
-      }
-      else {
-        viz <- treeplot(tree, "Phylogenetic Tree")
-        
-        tree_rot <- ggtree::rotate(viz, input$val_rot) +
-          geom_hilight(node = input$val_rot, fill = "#0466C8") +
-          ggtitle("Rotated Phylogenetic Tree")
-        tree_rot
-      }
+      tree_rot <- ggtree::rotate(viz, input$val_rot) +
+        geom_hilight(node = input$val_rot, fill = "#0466C8") +
+        ggtitle("Rotated Phylogenetic Tree")
+      tree_rot
+    }
     #}
   })
-  
   output$rotate <- renderPlot({
     rotate_out()
   })
@@ -540,38 +580,40 @@ server <- function(input, output) {
   # FLIP
   flip_out <- eventReactive(input$flip, {
     #if (input$flip) {
-      tree <- fileee()
-      viz <- treeplot(tree, "Phylogenetic Tree")
-      
-      tree_flip <-
-        ggtree::flip(viz, input$val_f1, input$val_f2) + geom_hilight(node = input$val_f1, fill = "#0466C8") +
-        geom_hilight(node = input$val_f2, fill = "#002855") +
-        ggtitle("Flipped Phylogenetic Tree")
-      tree_flip
+    tree <- fileee()
+    viz <- treeplot(tree, "Phylogenetic Tree")
+    
+    tree_flip <-
+      ggtree::flip(viz, input$val_f1, input$val_f2) + geom_hilight(node = input$val_f1, fill = "#0466C8") +
+      geom_hilight(node = input$val_f2, fill = "#002855") +
+      ggtitle("Flipped Phylogenetic Tree")
+    tree_flip
     #}
   })
-  
   output$flip <- renderPlot({
     flip_out()
   })
   
   # REROOT
   root_out <- eventReactive(input$root, {
-      tree <- fileee()
-      all_nodes <- treeio::Nnode(tree, internal.only = FALSE)
-      
-      if (isTRUE(input$val_root > all_nodes)) {
-        shiny::validate(paste0("Error: Node number should be less than or equal to ", all_nodes, "!"))
-      }
-      else {
-        t <- ape::root(tree,
-                       node = input$val_root,
-                       resolve.root = TRUE)
-        tree_root <- treeplot(t, "Rerooted Phylogenetic Tree")
-        tree_root
-      }
+    tree <- fileee()
+    all_nodes <- treeio::Nnode(tree, internal.only = FALSE)
+    
+    if (isTRUE(input$val_root > all_nodes)) {
+      shiny::validate(paste0(
+        "Error: Node number should be less than or equal to ",
+        all_nodes,
+        "!"
+      ))
+    }
+    else {
+      t <- ape::root(tree,
+                     node = input$val_root,
+                     resolve.root = TRUE)
+      tree_root <- treeplot(t, "Rerooted Phylogenetic Tree")
+      tree_root
+    }
   })
-  
   output$root <- renderPlot({
     root_out()
   })
@@ -594,9 +636,9 @@ server <- function(input, output) {
           dec = "."
         )
       dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
-      new_clu <- cluster[!cluster$V10 %in% del, ]
-      new_clu <- new_clu[!new_clu$V9 %in% del, ]
-      new_clu <- new_clu[!duplicated(new_clu$V9), ]
+      new_clu <- cluster[!cluster$V10 %in% del,]
+      new_clu <- new_clu[!new_clu$V9 %in% del,]
+      new_clu <- new_clu[!duplicated(new_clu$V9),]
       new_clu <- as.vector(new_clu$V9)
       
       # Export PR2 file
@@ -608,7 +650,6 @@ server <- function(input, output) {
       remove_modal_spinner() # remove it when done
     }
   })
-  
   output$pipeline <- renderText({
     removee()
   })
@@ -620,26 +661,25 @@ server <- function(input, output) {
       if (interactive())
         show_modal_spinner(spin = "fading-circle",
                            color = "#0063B1",
-                           text = "Please Wait...")
+                           text = "Please Wait...!!")
       
       # Vsearch
-      update_modal_spinner(text = "Running VSEARCH Sort...")
+      update_modal_spinner(text = "Running VSEARCH Sort by Length...")
       x <-
-        c(
-          paste(
-            "vsearch --sortbylength",
-            input$prmod$datapath,
-            "--output CLADE_sort2.fa --minseqlength 500 -notrunclabels",
-            sep = " "
-          )
+        #c(
+        paste(
+          "vsearch --sortbylength",
+          input$prmod$datapath,
+          "--output CLADE_sort2.fa --minseqlength 500 -notrunclabels",
+          sep = " "
         )
+      #)
       system(x)
       
       update_modal_spinner(text = "Running VSEARCH Cluster...")
       system(
         "vsearch --cluster_smallmem CLADE_sort2.fa --id 0.97 --centroids CLADE.clustered2.fa -uc CLADE2.cluster"
       )
-      #update_modal_progress(1, text = "Finished Running VSEARCH Cluster...")
       
       # Import FA files to DNAbin objects
       clu <- treeio::read.fasta("CLADE.clustered2.fa")
@@ -662,14 +702,12 @@ server <- function(input, output) {
       update_modal_spinner(text = "Running MAFFT Alignment...")
       system("mafft --reorder --auto CLADE.cluster2.fa > CLADE_aligned2.fa")
       
-      
       # TrimAl
       update_modal_spinner(text = "Running TRIMAL...")
       system("trimal -in CLADE_aligned2.fa -out CLADE.trimal2.fa -gt 0.3 -st 0.001")
       
-      
       # RAxML
-      update_modal_spinner(text = "Finished Running RAxML...")
+      update_modal_spinner(text = "Running RAxML...")
       system ("rm -f RAxML.*") #raxml complains if previous files are present, so let's clear them
       system(
         "raxmlHPC-PTHREADS-SSE3 -T 4 -m GTRCAT -c 25 -e 0.001 -p 31415 -f a -N 100 -x 02938 -n tre -s CLADE.trimal2.fa"
@@ -685,7 +723,6 @@ server <- function(input, output) {
       return(viz)
     }
   })
-  
   output$remove <- renderPlot({
     pr2mod()
   })
