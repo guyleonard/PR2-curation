@@ -629,10 +629,10 @@ server <- function(input, output) {
       )
     
     dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
-
-    new_clu <- cluster[!cluster$V10 %in% del, ]
-    new_clu <- new_clu[!new_clu$V9 %in% del, ]
-    new_clu <- new_clu[!duplicated(new_clu$V9), ]
+    
+    new_clu <- cluster[!cluster$V10 %in% del,]
+    new_clu <- new_clu[!new_clu$V9 %in% del,]
+    new_clu <- new_clu[!duplicated(new_clu$V9),]
     new_clu <- as.vector(new_clu$V9)
     
     # Export PR2 file
