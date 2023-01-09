@@ -544,7 +544,6 @@ server <- function(input, output) {
   
   # ROTATE
   rotate_out <- eventReactive(input$rot, {
-    #if (input$rot) {
     tree <- user_tree()
     total_nodes <- treeio::Nnode(tree, internal.only = FALSE)
     internal_nodes <- treeio::Nnode(tree, internal.only = FALSE)
@@ -570,7 +569,7 @@ server <- function(input, output) {
   # FLIP
   flip_out <- eventReactive(input$flip, {
     #if (input$flip) {
-    tree <- fileee()
+    tree <- user_tree()
     viz <- treeplot(tree, "Phylogenetic Tree")
     
     tree_flip <-
@@ -586,7 +585,7 @@ server <- function(input, output) {
   
   # REROOT
   root_out <- eventReactive(input$root, {
-    tree <- fileee()
+    tree <- user_tree()
     all_nodes <- treeio::Nnode(tree, internal.only = FALSE)
     
     if (isTRUE(input$val_root > all_nodes)) {
@@ -733,7 +732,7 @@ server <- function(input, output) {
       #treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
       #  new_name$V2
       
-      tree <- fileee()
+      tree <- user_tree()
       tree_renamed = rename_taxa(tree, new_name, genbank_accession, tax)
       viz <-
         treeplot(tree_renamed, "Phylogenetic Tree with Renamed Branches ")
