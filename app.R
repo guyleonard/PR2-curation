@@ -152,7 +152,13 @@ ui <- fluidPage(sidebarLayout(
         )
       ),
       
-      helpText("B) Select the newly generated file named 'pr2_CLADE.fa'."),
+      helpText("B) Outgroup Fasta File 'outgroup.fa'."),
+      fluidRow(column(
+        width = 8,
+        fileInput(inputId = "outgroup", label = "Choose Outgroup File:")
+      )),
+      
+      helpText("C) Select the newly generated file named 'pr2_CLADE.fa'."),
       fluidRow(
         column(width = 8,
                fileInput(inputId = "seq", label = "Choose FA File:")),
@@ -169,26 +175,11 @@ ui <- fluidPage(sidebarLayout(
       ),
       
       helpText(
-        "C) Select the file named 'RAxML_bipartitionsBranchLabels.tre'."
+        "D) Select the file named 'RAxML_bipartitionsBranchLabels.tre'."
       ),
-      #   fluidRow(
-      #     column(
-      #       width = 8,
-      #       fileInput(inputId = "raxml", label = "Choose RAxML Tree File:")
-      #     ),
-      #     column(
-      #       width = 4,
-      #       style = "margin-top: 25px;",
-      #       actionButton(
-      #         inputId = "treRaxml",
-      #         label = "Plot Tree",
-      #         style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1",
-      #         icon = icon("tree")
-      #       )
-      #     )
-      #   ),
     ),
     
+    # input tree file
     fluidRow(
       column(width = 8,
              fileInput(inputId = "tre", label = "Choose Tree File:")),
@@ -639,9 +630,9 @@ server <- function(input, output) {
     
     dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
     
-    new_clu <- cluster[!cluster$V10 %in% del,]
-    new_clu <- new_clu[!new_clu$V9 %in% del,]
-    new_clu <- new_clu[!duplicated(new_clu$V9),]
+    new_clu <- cluster[!cluster$V10 %in% del, ]
+    new_clu <- new_clu[!new_clu$V9 %in% del, ]
+    new_clu <- new_clu[!duplicated(new_clu$V9), ]
     new_clu <- as.vector(new_clu$V9)
     
     # Export PR2 file
