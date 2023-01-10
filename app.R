@@ -114,7 +114,8 @@ ui <- fluidPage(sidebarLayout(
       condition = "input.start == 'PR2'",
       p(style = "border-bottom: 1px dotted; border-color:#0063B1"),
       helpText(
-        "A) Choose your taxonomic category and lineage group, then click 'Generate'."
+        "A) Choose your taxonomic category and lineage group, then click 'Generate'
+        to create your fasta sequences as 'pr2_CLADE.fa'."
       ),
       selectInput(
         inputId = "tax",
@@ -152,13 +153,15 @@ ui <- fluidPage(sidebarLayout(
         )
       ),
       
-      helpText("B) Outgroup Fasta File 'outgroup.fa'."),
+      helpText("B) Select your Outgroup Fasta File 'outgroup.fa'. (Optional)"),
       fluidRow(column(
         width = 8,
         fileInput(inputId = "outgroup", label = "Choose Outgroup File:")
       )),
       
-      helpText("C) Select the newly generated file named 'pr2_CLADE.fa'."),
+      helpText(
+        "C) Select the newly generated file from B) named 'pr2_CLADE.fa' and click 'Run Pipeline'."
+      ),
       fluidRow(
         column(width = 8,
                fileInput(inputId = "seq", label = "Choose FA File:")),
@@ -175,7 +178,7 @@ ui <- fluidPage(sidebarLayout(
       ),
       
       helpText(
-        "D) Select the file named 'RAxML_bipartitionsBranchLabels.tre'."
+        "D) Finally, select the file named 'RAxML_bipartitionsBranchLabels.tre'."
       ),
     ),
     
@@ -325,12 +328,16 @@ ui <- fluidPage(sidebarLayout(
     # Modify
     div(h4(em("Modify:")), style = "color:#0063B1"),
     helpText(
-      "The modified file has been generated in your directory with the name 'pr2_CLADE_modify.fa'."
+      "The modified file has been generated in your directory with the name 'pr2_CLADE_modify.fa'. Outgroup file is optional."
     ),
     fluidRow(
       column(
         width = 8,
-        fileInput(inputId = "prmod", label = "Choose file with modifications:")
+        fileInput(inputId = "outgroup2", label = "Choose Outgroup File:")
+      ),
+      column(
+        width = 8,
+        fileInput(inputId = "prmod", label = "Choose File with Modifications:")
       ),
       column(
         width = 4,
@@ -491,11 +498,17 @@ server <- function(input, output) {
     )
     
     # Import FA files to DNAbin objects
-    clu <- treeio::read.fasta("CLADE.clustered.fa")
-    out <- treeio::read.fasta("outgroup.fa")
-    
-    # Concatenate the files
-    file <- insect::join(clu, out)
+    outgroup_file <- input$outgroup$datapath
+    if (!is.null(outgroup_file)) {
+      clu <- treeio::read.fasta("CLADE.clustered.fa")
+      out <- treeio::read.fasta(input$outgroup$datapath)
+      
+      # Concatenate the files
+      file <- insect::join(clu, out)
+    }
+    else {
+      file <- treeio::read.fasta("CLADE.clustered.fa")
+    }
     
     # Saving the sequences as a FA file
     cat(file = "CLADE.cluster.fa",
@@ -630,9 +643,9 @@ server <- function(input, output) {
     
     dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
     
-    new_clu <- cluster[!cluster$V10 %in% del, ]
-    new_clu <- new_clu[!new_clu$V9 %in% del, ]
-    new_clu <- new_clu[!duplicated(new_clu$V9), ]
+    new_clu <- cluster[!cluster$V10 %in% del,]
+    new_clu <- new_clu[!new_clu$V9 %in% del,]
+    new_clu <- new_clu[!duplicated(new_clu$V9),]
     new_clu <- as.vector(new_clu$V9)
     
     # Export PR2 file
@@ -674,11 +687,17 @@ server <- function(input, output) {
     )
     
     # Import FA files to DNAbin objects
-    clu <- treeio::read.fasta("CLADE_modify.clustered.fa")
-    out <- treeio::read.fasta("outgroup.fa")
-    
-    # Concatenate the files
-    file <- insect::join(clu, out)
+    outgroup_file <- input$outgroup2$datapath
+    if (!is.null(outgroup_file)) {
+      clu <- treeio::read.fasta("CLADE.clustered.fa")
+      out <- treeio::read.fasta(input$outgroup2$datapath)
+      
+      # Concatenate the files
+      file <- insect::join(clu, out)
+    }
+    else {
+      file <- treeio::read.fasta("CLADE.clustered.fa")
+    }
     
     # Saving the sequences as a FA file
     cat(file = "CLADE_modify.cluster.fa",
