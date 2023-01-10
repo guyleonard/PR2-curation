@@ -8,6 +8,7 @@ librarian::shelf(
   Biostrings,
   devtools,
   dplyr,
+  gginnards,
   ggplot2,
   ggrepel,
   ggtree,
@@ -39,13 +40,17 @@ treeplot <- function(tree, x) {
     ) +
     hexpand(.05) +
     labs(title = x) +
-    geom_label(
-      aes(x = branch, label = bootstrap),
-      fill = 'white',
+    # bootstrap
+    geom_label_repel(
+      aes(x = branch, label = bootstrap, fill = bootstrap),
+      #fill = 'white',
       color = "black",
       size = 2,
       hjust =  0.4
     ) +
+    scale_fill_gradient(low = "lightblue", high = "lightyellow") +
+    theme(legend.position = "none") +
+    # node number
     geom_label2(
       aes(subset = !isTip, label = node),
       fill = '#126782',
@@ -628,9 +633,9 @@ server <- function(input, output) {
     
     dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
     
-    new_clu <- cluster[!cluster$V10 %in% del, ]
-    new_clu <- new_clu[!new_clu$V9 %in% del, ]
-    new_clu <- new_clu[!duplicated(new_clu$V9), ]
+    new_clu <- cluster[!cluster$V10 %in% del,]
+    new_clu <- new_clu[!new_clu$V9 %in% del,]
+    new_clu <- new_clu[!duplicated(new_clu$V9),]
     new_clu <- as.vector(new_clu$V9)
     
     # Export PR2 file
@@ -722,9 +727,8 @@ server <- function(input, output) {
   
   # RENAME
   renamee <- eventReactive(input$rename, {
-    # Attach file
-    #if (input$rename) {
     shiny::validate(need(input$refile, "Input a Rename File!"))
+    
     new_name <-
       read.csv(
         input$refile$datapath,
@@ -733,19 +737,35 @@ server <- function(input, output) {
         sep = "\t"
       )
     # replot <- treeplot(treeR, "Phylogenetic tree with renamed branches")
-    #treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
-    #  new_name$V2
+    # treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
+    # new_name$V2
     
-    tree <- user_tree()
-    #tree_renamed = rename_taxa(tree, new_name, genbank_accession, tax)
-    viz <-
-      treeplot(tree, "Phylogenetic Tree with Renamed Branches ")
+    tree <- last_plot() + ggtitle("Renamed Phylogenetic Tree")
+    tree <- delete_layers(tree, "StatTreeLabel")
     
-    viz %<+% new_name + geom_tiplab(aes(label = tax))
-    viz
+    #   align = TRUE,
+    #   size = 3,
+    #   color = '#FFFFFF',
+    #   linesize = .3,
+    #   fontface = "bold"
+    # )
+    # tree_renamed = rename_taxa(tree, new_name, genbank_accession, tax)
+    # viz <- treeplot(tree, "Phylogenetic Tree with Renamed Branches ")
+    
+    viz <- tree %<+% new_name + geom_tiplab(
+      aes(label = tax),
+      align = TRUE,
+      size = 3,
+      color = '#609ECF',
+      linesize = .3,
+      fontface = "bold"
+    )
+    #viz <- delete_layers(viz, "StatTreeLabel")
+    
+    #viz
     #p_rename <-
     #  treeplot(viz, "Phylogenetic Tree with Renamed Branches")
-    #return(viz)
+    return(viz)
     #}
   })
   output$rename <- renderPlot({
