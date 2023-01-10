@@ -736,21 +736,9 @@ server <- function(input, output) {
         quote = "\"",
         sep = "\t"
       )
-    # replot <- treeplot(treeR, "Phylogenetic tree with renamed branches")
-    # treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
-    # new_name$V2
-    
+
     tree <- last_plot() + ggtitle("Renamed Phylogenetic Tree")
     tree <- delete_layers(tree, "StatTreeLabel")
-    
-    #   align = TRUE,
-    #   size = 3,
-    #   color = '#FFFFFF',
-    #   linesize = .3,
-    #   fontface = "bold"
-    # )
-    # tree_renamed = rename_taxa(tree, new_name, genbank_accession, tax)
-    # viz <- treeplot(tree, "Phylogenetic Tree with Renamed Branches ")
     
     viz <- tree %<+% new_name + geom_tiplab(
       aes(label = tax),
@@ -760,13 +748,8 @@ server <- function(input, output) {
       linesize = .3,
       fontface = "bold"
     )
-    #viz <- delete_layers(viz, "StatTreeLabel")
-    
-    #viz
-    #p_rename <-
-    #  treeplot(viz, "Phylogenetic Tree with Renamed Branches")
+
     return(viz)
-    #}
   })
   output$rename <- renderPlot({
     renamee()
