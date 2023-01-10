@@ -763,7 +763,7 @@ server <- function(input, output) {
       color = '#609ECF',
       linesize = .3,
       fontface = "bold"
-    )
+    ) + xlim(NA, .3)
     
     return(viz)
   })
