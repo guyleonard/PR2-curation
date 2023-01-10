@@ -564,7 +564,8 @@ server <- function(input, output) {
         geom_hilight(node = input$val_rot, fill = "#0466C8") +
         ggtitle("Rotated Phylogenetic Tree")
       
-      tree_rot <- move_layers(tree_rot, "GeomHilightRect", position = "bottom")
+      tree_rot <-
+        move_layers(tree_rot, "GeomHilightRect", position = "bottom")
       
       tree_rot
     }
@@ -582,7 +583,8 @@ server <- function(input, output) {
       geom_hilight(node = input$val_f2, fill = "#002855") +
       ggtitle("Flipped Phylogenetic Tree")
     
-      tree_flip <- move_layers(tree_flip, "GeomHilightRect", position = "bottom")
+    tree_flip <-
+      move_layers(tree_flip, "GeomHilightRect", position = "bottom")
     
     tree_flip
   })
@@ -637,9 +639,9 @@ server <- function(input, output) {
     
     dataset <- Biostrings::readDNAStringSet(input$prfile$datapath)
     
-    new_clu <- cluster[!cluster$V10 %in% del, ]
-    new_clu <- new_clu[!new_clu$V9 %in% del, ]
-    new_clu <- new_clu[!duplicated(new_clu$V9), ]
+    new_clu <- cluster[!cluster$V10 %in% del,]
+    new_clu <- new_clu[!new_clu$V9 %in% del,]
+    new_clu <- new_clu[!duplicated(new_clu$V9),]
     new_clu <- as.vector(new_clu$V9)
     
     # Export PR2 file
