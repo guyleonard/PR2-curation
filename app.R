@@ -58,7 +58,7 @@ treeplot <- function(tree, x) {
 ## UI
 ui <- fluidPage(sidebarLayout(
   sidebarPanel(
-    style = "height: 90vh; overflow-y: auto;",
+    style = "height: 100vh; overflow-y: auto;",
     span(titlePanel(title = div(
       img(
         src = "tra.png",
@@ -238,7 +238,7 @@ ui <- fluidPage(sidebarLayout(
         width = 8,
         numericInput(
           inputId = "val_rot",
-          label = "Branch number:",
+          label = "Branch Number:",
           value = 87
         )
       ),
@@ -259,9 +259,9 @@ ui <- fluidPage(sidebarLayout(
     div(h4(em("Flip Nodes:")), style = "color:#0063B1"),
     fluidRow(
       column(width = 4,
-             numericInput("val_f1", "Node number:", 87)),
+             numericInput("val_f1", "Node Number:", 87)),
       column(width = 4,
-             numericInput("val_f2", "Node number:", 72)),
+             numericInput("val_f2", "Node Number:", 72)),
       column(
         width = 4,
         style = "margin-top: 25px;",
@@ -278,11 +278,11 @@ ui <- fluidPage(sidebarLayout(
     # Rename
     div(h4(em("Rename Nodes:")), style = "color:#0063B1"),
     helpText(
-      "The file must contain the old branch name and tab-separated the
+      "The file must contain the old branch name, atab-separation, and the
                new branch name."
     ),
     fluidRow(
-      column(width = 8, fileInput(inputId = "refile", label = "Choose file:")),
+      column(width = 8, fileInput(inputId = "refile", label = "Choose File:")),
       column(
         width = 4,
         style = "margin-top: 25px;",
@@ -324,7 +324,7 @@ ui <- fluidPage(sidebarLayout(
     ),
     p(style = "border-bottom: 1px solid"),
     
-    h3("4b) Modify Tree Pipeline"),
+    h3("4b) Generate Modified Tree"),
     
     # Modify
     div(h4(em("Modify:")), style = "color:#0063B1"),
@@ -341,11 +341,14 @@ ui <- fluidPage(sidebarLayout(
         style = "margin-top: 25px;",
         actionButton(
           inputId = "removed",
-          label = "Plot Tree",
-          icon = icon("tree"),
+          label = "Run Pipeline",
+          icon = icon("circle-play"),
           style = "color: #F9FBFC; background-color: #0063B1; border-color: #0063B1"
         )
       )
+    ),
+    helpText(
+      "To further edit the tree, once complete, return to Step 1) and use the 'RAxML_bipartitionsBranchLabels_modified.tre' as your user input tree."
     ),
     p(style = "border-bottom: 1px solid"),
     
@@ -354,7 +357,7 @@ ui <- fluidPage(sidebarLayout(
       inputId = "save",
       label = h3("Download Reference Tree"),
       choices =  list("pdf",
-                      "tre"),
+                      "tre (newick)"),
       selected = "pdf"
     ),
     
@@ -433,10 +436,6 @@ server <- function(input, output) {
                    ChartOrder(ChartOrder()[ChartOrder() != "remove"])
                  }
                })
-  
-  # observeEvent(input$seqbut, {
-  #   pl()
-  # })
   
   # Input SelectBox and TextInput
   mydf <- reactive({
@@ -544,7 +543,8 @@ server <- function(input, output) {
   
   # ROTATE
   rotate_out <- eventReactive(input$rot, {
-    tree <- user_tree()
+    tree <- as.treedata(last_plot())
+    
     total_nodes <- treeio::Nnode(tree, internal.only = FALSE)
     internal_nodes <- treeio::Nnode(tree, internal.only = FALSE)
     start_node <- total_nodes - internal_nodes
@@ -553,14 +553,14 @@ server <- function(input, output) {
       shiny::validate("Node number out of range!")
     }
     else {
-      viz <- treeplot(tree, "Phylogenetic Tree")
+      tree2 <- last_plot()
       
-      tree_rot <- ggtree::rotate(viz, input$val_rot) +
+      tree_rot <- ggtree::rotate(tree2, input$val_rot) +
         geom_hilight(node = input$val_rot, fill = "#0466C8") +
         ggtitle("Rotated Phylogenetic Tree")
+      
       tree_rot
     }
-    #}
   })
   output$rotate <- renderPlot({
     rotate_out()
@@ -568,16 +568,14 @@ server <- function(input, output) {
   
   # FLIP
   flip_out <- eventReactive(input$flip, {
-    #if (input$flip) {
-    tree <- user_tree()
-    viz <- treeplot(tree, "Phylogenetic Tree")
+    tree <- last_plot()
     
     tree_flip <-
-      ggtree::flip(viz, input$val_f1, input$val_f2) + geom_hilight(node = input$val_f1, fill = "#0466C8") +
+      ggtree::flip(tree, input$val_f1, input$val_f2) + geom_hilight(node = input$val_f1, fill = "#0466C8") +
       geom_hilight(node = input$val_f2, fill = "#002855") +
       ggtitle("Flipped Phylogenetic Tree")
+    
     tree_flip
-    #}
   })
   output$flip <- renderPlot({
     flip_out()
@@ -585,7 +583,7 @@ server <- function(input, output) {
   
   # REROOT
   root_out <- eventReactive(input$root, {
-    tree <- user_tree()
+    tree <- as.treedata(last_plot())
     all_nodes <- treeio::Nnode(tree, internal.only = FALSE)
     
     if (isTRUE(input$val_root > all_nodes)) {
@@ -702,48 +700,53 @@ server <- function(input, output) {
     system(
       "raxmlHPC-PTHREADS-SSE3 -T 4 -m GTRCAT -c 25 -e 0.001 -p 31415 -f a -N 100 -x 02938 -n tre -s CLADE_modify.trimal.fa"
     )
+    system(
+      "mv RAxML_bipartitionsBranchLabels.tre RAxML_bipartitionsBranchLabels_modified.tre"
+    )
     
+    remove_modal_spinner()
+    
+    # This is essentially the user input tree from Part 1)
     treeR <-
-      treeio::read.raxml("RAxML_bipartitionsBranchLabels.tre")
+      treeio::read.raxml("RAxML_bipartitionsBranchLabels_modified.tre")
     
     # Visualize tree
     viz <-
       treeplot(treeR, "Phylogenetic Tree with Modified/Removed Branches")
-    remove_modal_spinner() # remove it when done
+    
     return(viz)
-    #}
   })
   output$remove <- renderPlot({
     pr2mod()
   })
   
   # RENAME
-  renamee <- reactive({
+  renamee <- eventReactive(input$rename, {
     # Attach file
-    if (input$rename) {
-      shiny::validate(need(input$refile, "Input a File!"))
-      new_name <-
-        read.csv(
-          input$refile$datapath,
-          header = TRUE,
-          quote = "\"",
-          sep = "\t"
-        )
-      # replot <- treeplot(treeR, "Phylogenetic tree with renamed branches")
-      #treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
-      #  new_name$V2
-      
-      tree <- user_tree()
-      #tree_renamed = rename_taxa(tree, new_name, genbank_accession, tax)
-      viz <-
-        treeplot(tree, "Phylogenetic Tree with Renamed Branches ")
-      
-      viz %<+% new_name + geom_tiplab(aes(label = tax))
-      viz
-      #p_rename <-
-      #  treeplot(viz, "Phylogenetic Tree with Renamed Branches")
-      #return(viz)
-    }
+    #if (input$rename) {
+    shiny::validate(need(input$refile, "Input a Rename File!"))
+    new_name <-
+      read.csv(
+        input$refile$datapath,
+        header = TRUE,
+        quote = "\"",
+        sep = "\t"
+      )
+    # replot <- treeplot(treeR, "Phylogenetic tree with renamed branches")
+    #treeR@phylo$tip.label[match(new_name$V1, treeR@phylo$tip.label)] <-
+    #  new_name$V2
+    
+    tree <- user_tree()
+    #tree_renamed = rename_taxa(tree, new_name, genbank_accession, tax)
+    viz <-
+      treeplot(tree, "Phylogenetic Tree with Renamed Branches ")
+    
+    viz %<+% new_name + geom_tiplab(aes(label = tax))
+    viz
+    #p_rename <-
+    #  treeplot(viz, "Phylogenetic Tree with Renamed Branches")
+    #return(viz)
+    #}
   })
   output$rename <- renderPlot({
     renamee()
