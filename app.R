@@ -360,7 +360,7 @@ ui <- fluidPage(sidebarLayout(
       inputId = "save",
       label = h3("Download Reference Tree"),
       choices =  list("pdf",
-                      "tre (newick)"),
+                      "tre"),
       selected = "pdf"
     ),
     
@@ -399,7 +399,7 @@ server <- function(input, output) {
   })
   
   # observeEvent(input$start,
-  #              ChartOrder(PutChartOnTop("tree", ChartOrder())))
+  #               ChartOrder(PutChartOnTop("tree", ChartOrder())))
   
   observeEvent(input$val_root | input$root,
                ChartOrder(PutChartOnTop("root", ChartOrder())))
@@ -753,9 +753,13 @@ server <- function(input, output) {
         sep = "\t"
       )
     
+    ## this section renames the ggtree graphic names
+    #
     tree <- last_plot() + ggtitle("Renamed Phylogenetic Tree")
+    # remove the old accession name layer
     tree <- delete_layers(tree, "StatTreeLabel")
     
+    # match the accessions to the table replacement names
     viz <- tree %<+% new_name + geom_tiplab(
       aes(label = tax),
       align = TRUE,
@@ -764,6 +768,10 @@ server <- function(input, output) {
       linesize = .3,
       fontface = "bold"
     ) + xlim(NA, .3)
+    
+    # modify the actual label names directly
+    # so that output newick files have the renamed values
+    #viz$data[["label"]] <- viz$data[["tax"]]
     
     return(viz)
   })
@@ -787,7 +795,9 @@ server <- function(input, output) {
           limitsize = FALSE
         )
       } else if (input$save == "tre") {
-        ape::write.tree(as.phylo(last_plot()), file)
+        viz <- last_plot()
+        viz$data[["label"]] <- viz$data[["tax"]]
+        ape::write.tree(as.phylo(viz), file)
       }
     }
   )
