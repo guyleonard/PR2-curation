@@ -769,10 +769,6 @@ server <- function(input, output) {
       fontface = "bold"
     ) + xlim(NA, .3)
     
-    # modify the actual label names directly
-    # so that output newick files have the renamed values
-    #viz$data[["label"]] <- viz$data[["tax"]]
-    
     return(viz)
   })
   output$rename <- renderPlot({
