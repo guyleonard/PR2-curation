@@ -22,6 +22,27 @@ librarian::shelf(
   quiet = TRUE
 )
 
+# # cannot get librarian to load (bioconductor packages) when publishing
+# library(BiocManager)
+# options(repos = BiocManager::repositories())
+# 
+# library(ape)
+# library(base)
+# library(Biostrings)
+# library(devtools)
+# library(dplyr)
+# library(gginnards)
+# library(ggplot2)
+# library(ggrepel)
+# library(ggtree)
+# library(insect)
+# library(readxl)
+# library(shiny)
+# library(shinybusy)
+# library(tidytree)
+# library(treeio)
+# library(pr2database)
+
 ## FUNCTIONS
 seq_clade <- function(x) {
   seq_clade <- Biostrings::DNAStringSet(x$sequence)
